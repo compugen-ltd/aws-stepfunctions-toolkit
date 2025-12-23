@@ -15,7 +15,7 @@
     "@awslabs.aws-documentation-mcp-server"
   ],
   "resources": [
-    "file://.kiro/knowledge/amazon_state_language.md",
-    "file://.kiro//knowledge/history_events.md"
+    "file://.kiro/knowledge/*.md",
+    "file://.kiro/steering/**/*.md"
   ]
 }
