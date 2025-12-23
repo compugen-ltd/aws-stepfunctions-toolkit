@@ -1,0 +1,64 @@
+[project]
+name = "aws-stepfunctions-toolkit"
+version = "0.1.0"
+authors = [
+    { name = "Roy Assis", email = "roya@cgen.com" },
+]
+description = "POC for using AWS Step Functions test API for testing state machines locally using mock data"
+readme = "README.md"
+requires-python = ">=3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "boto3>=1.42.10",
+    "boto3-stubs[stepfunctions]>=1.42.12",
+    "pydantic-settings>=2.12.0",
+    "typer>=0.20.0",
+    "typing-extensions>=4.9.0",
+    "jmespath>=1.0.0",
+]
+
+[project.scripts]
+sfn-toolkit = "aws_stepfunctions_toolkit.cli:main"
+
+[dependency-groups]
+dev = [
+    "poethepoet>=0.37.0",
+    "ruff>=0.1.8",
+    "black>=23.12.0",
+    "ipykernel>=7.1.0",
+    "ipython>=9.8.0",
+    "notebook>=7.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/compugen-ltd/aws-stepfunctions-toolkit"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["aws_stepfunctions_toolkit"]
+
+[tool.setuptools.package-data]
+aws_stepfunctions_toolkit = ["py.typed"]
+
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+priority = "primary"
+
+[[tool.uv.index]]
+name = "aws"
+url = "https://cgen-000000000000.d.codeartifact.us-east-1.amazonaws.com/pypi/cgen-pypi/simple/"
+publish-url = "https://cgen-000000000000.d.codeartifact.us-east-1.amazonaws.com/pypi/cgen-pypi/"
+install = false
+
+[tool.poe.tasks.publish]
+cmd = "python scripts/publish.py"
+

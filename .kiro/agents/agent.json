@@ -1,0 +1,21 @@
+{
+  "name": "agent",
+  "description": "Refactoring agent",
+  "prompt": "file://../prompts/prompt.md",
+  "tools": [
+    "read",
+    "write",
+    "@awslabs.aws-documentation-mcp-server",
+    "@fetch",
+    "@awslabs.aws-api-mcp-server"
+  ],
+  "includeMcpJson" : true,
+  "allowedTools": [
+    "read",
+    "@awslabs.aws-documentation-mcp-server"
+  ],
+  "resources": [
+    "file://.kiro/knowledge/amazon_state_language.md",
+    "file://.kiro//knowledge/history_events.md"
+  ]
+}
