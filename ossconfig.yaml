@@ -1,0 +1,15 @@
+ort:
+  scanner:
+    storageReaders: ["fileBasedStorage"]
+    storageWriters: ["fileBasedStorage"]
+    storages:
+      fileBasedStorage:
+        backend:
+          localFileStorage:
+            directory: "/tmp/ort/scan-results"
+            compression: false
+    scanners:
+      ScanCode:
+        options:
+          commandLine: "--copyright,--license,--info,--strip-root,--timeout,60,--max-depth,2,--ignore,*.test.js,--ignore,*.spec.js,--license-text"
+          commandLineNonConfig: ""

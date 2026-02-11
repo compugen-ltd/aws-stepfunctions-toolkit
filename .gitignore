@@ -13,3 +13,8 @@ scratch.py
 .idea
 
 data
+
+.ort-temp
+.scan-results
+
+requirements.txt
