@@ -38,7 +38,7 @@ docker run --rm -v $(pwd)/.ort-temp:/project ghcr.io/oss-review-toolkit/ort:late
     -i /project/ort-results/scan-result.yml \
     -o /project/ort-results \
     -f PlainTextTemplate \
-    -O PlainTextTemplate=template.id=NOTICE_SUMMARY
+    -O PlainTextTemplate=template.id=NOTICE_DEFAULT
 
 # Copy result
 echo "6. Copying to ThirdPartyNotices.txt..."
