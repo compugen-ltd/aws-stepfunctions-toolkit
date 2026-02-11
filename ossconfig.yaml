@@ -6,7 +6,7 @@ ort:
       fileBasedStorage:
         backend:
           localFileStorage:
-            directory: "/tmp/ort/scan-results"
+            directory: "/home/ort/.ort/scanner/scan-results"
             compression: false
     scanners:
       ScanCode:

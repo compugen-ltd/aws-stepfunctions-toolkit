@@ -24,8 +24,8 @@ docker run --rm -v $(pwd)/.ort-temp:/project ghcr.io/oss-review-toolkit/ort:late
 echo "4. Running ORT scanner..."
 docker run --rm \
 	-v $(pwd)/.ort-temp:/project \
-	-v $(pwd)/ossconfig.yaml:/home/ort/.ort/config/config.yml \
-    -v $(pwd)/.scan-results:/tmp/ort/scan-results \
+	-v $(pwd)/ossconfig.yaml:/home/ort/.ort/config/config.yml:ro \
+    -v $HOME/.ort:/home/ort/.ort/ \
 	ghcr.io/oss-review-toolkit/ort:latest \
     scan \
     -i /project/ort-results/analyzer-result.yml \
