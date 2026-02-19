@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 THIS_DIR = Path(__file__).parent
 DEFINITIONS_DIR = THIS_DIR.joinpath("asl_definitions")
 
+
 @pytest.fixture
 def definitions() -> dict[str, dict]:
     return {
@@ -20,11 +21,13 @@ def definitions() -> dict[str, dict]:
         "child": json.loads((DEFINITIONS_DIR / "child.asl.json").read_text())
     }
 
+
 @pytest.fixture
 def runner_input() -> dict:
     return {
-        "mem":{"example_batch_1":12,"example_batch_2":12},
-        "cpu": {"example_batch_1": 4, "example_batch_2": 4}
+        "mem": {"example_batch_1": 12, "example_batch_2": 12},
+        "cpu": {"example_batch_1": 4, "example_batch_2": 4},
+        "data": "somedata"
     }
 
 
@@ -48,7 +51,7 @@ def test_example_1(
             bake_file,
             volumes=volumes,
             variables=variables,
-            base_dir = str(THIS_DIR)
+            base_dir=str(THIS_DIR)
         ),
         "example_batch_2": StaticMockResponseStrategy(
             json.dumps(
