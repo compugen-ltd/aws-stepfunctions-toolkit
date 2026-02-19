@@ -3,9 +3,9 @@ import logging
 import json
 from pathlib import Path
 
-from aws_stepfunctions_toolkit.strategies import LocalBatchImageStrategy, GetLatestConfigurationStrategy, \
+from aws_stepfunctions_toolkit.workflow_runner.strategies import LocalBatchImageStrategy, GetLatestConfigurationStrategy, \
     StaticMockResponseStrategy
-from aws_stepfunctions_toolkit.workflow_runner import WorkflowRunner
+from aws_stepfunctions_toolkit.workflow_runner.workflow_runner import WorkflowRunner
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
