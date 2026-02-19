@@ -17,7 +17,7 @@ DEFINITIONS_DIR = THIS_DIR.joinpath("asl_definitions")
 @pytest.fixture
 def definitions() -> dict[str, dict]:
     return {
-        "main": json.loads((DEFINITIONS_DIR / "main.asl.json").read_text()),
+        "parent": json.loads((DEFINITIONS_DIR / "main.asl.json").read_text()),
         "child": json.loads((DEFINITIONS_DIR / "child.asl.json").read_text())
     }
 
@@ -73,7 +73,7 @@ def test_example_1(
     runner = WorkflowRunner(
         role_arn=role_arn,
         asl_registry={
-            "main": definitions["main"],
+            "main": definitions["parent"],
             "child-flow": definitions["child"]
         },
         variables=variables,
