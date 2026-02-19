@@ -27,3 +27,5 @@ requirements.txt
 /.vscode/settings.json
 
 !example.env
+
+.ruff_cache

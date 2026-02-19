@@ -71,3 +71,15 @@ install = false
 [tool.uv]
 keyring-provider = "subprocess"
 
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*ssl.*deprecated.*",
+    "ignore::requests.RequestsDependencyWarning",
+    "ignore::DeprecationWarning:testcontainers.*",
+    "ignore::FutureWarning:tiledbsoma.*",
+    "ignore:Transforming to str index.*"
+]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
