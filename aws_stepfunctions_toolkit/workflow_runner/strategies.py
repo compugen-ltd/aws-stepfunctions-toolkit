@@ -359,10 +359,10 @@ class StandardFlowStrategy(StateExecutionStrategy):
                     state_def.get("Branches", [])]
             return {"mock": {"result": json.dumps(resp)}, "context": context}
 
-        # if state_type == "Map":
-        #     items = input_data if isinstance(input_data, list) else input_data.get("items", [])
-        #     resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping) for item
-        #             in items]
-        #     return {"mock": {"result": json.dumps(resp)}, "context": context}
+        if state_type == "Map":
+            items = input_data if isinstance(input_data, list) else input_data.get("items", [])
+            resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping) for item
+                    in items]
+            return {"mock": {"result": json.dumps(resp)}, "context": context}
 
         return {}  # Fallback to default test_state behavior

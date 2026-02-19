@@ -53,7 +53,7 @@
                     ]
                 }
             },
-            "Output": "{% $merge([$states.result.Output, $states.input] %}"
+            "Output": "{% $merge([$states.result.Output, $states.input]) %}"
         },
         "example_batch_2": {
             "Next": "child",

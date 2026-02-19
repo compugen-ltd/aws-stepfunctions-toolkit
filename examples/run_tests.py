@@ -22,7 +22,10 @@ def definitions() -> dict[str, dict]:
 
 @pytest.fixture
 def runner_input() -> dict:
-    return {"key":"val"}
+    return {
+        "mem":{"example_batch_1":12,"example_batch_2":12},
+        "cpu": {"example_batch_1": 4, "example_batch_2": 4}
+    }
 
 
 def test_example_1(
