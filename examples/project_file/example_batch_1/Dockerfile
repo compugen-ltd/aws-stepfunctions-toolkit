@@ -11,4 +11,4 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
 
 COPY --chmod=777 src/ .
 
-ENTRYPOINT [ ".main.py" ]
+ENTRYPOINT [ "./main.py" ]

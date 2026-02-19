@@ -20,3 +20,5 @@ version-bump:
 publish:
 	uv publish --index aws
 
+run-example:
+	uv run pytest examples/run_tests.py
