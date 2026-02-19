@@ -73,8 +73,7 @@ def test_example_1(
     runner = WorkflowRunner(
         role_arn=role_arn,
         asl_registry={
-            "main": definitions["parent"],
-            "child-flow": definitions["child"]
+            "main": definitions["parent"]
         },
         variables=variables,
         mock_mapping=strategy_mapping
@@ -110,6 +109,9 @@ def test_example_2(
         ),
         "example_batch_2": StaticMockResponseStrategy(
             json.dumps({"result": "result"})
+        ),
+        "child_flow/example_batch_2": StaticMockResponseStrategy(
+            json.dumps({"result": "result"})
         )
     }
 
@@ -118,7 +120,7 @@ def test_example_2(
         role_arn=role_arn,
         asl_registry={
             "main": definitions["parent"],
-            "child-flow": definitions["child"]
+            "child_flow": definitions["child"]
         },
         variables=variables,
         mock_mapping=strategy_mapping

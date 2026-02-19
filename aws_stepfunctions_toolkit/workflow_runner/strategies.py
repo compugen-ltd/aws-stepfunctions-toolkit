@@ -18,6 +18,7 @@ from mypy_boto3_batch.client import BatchClient
 from mypy_boto3_batch.type_defs import ContainerOverridesTypeDef, KeyValuePairTypeDef
 from mypy_boto3_s3.client import S3Client
 
+
 if TYPE_CHECKING:
     from .workflow_runner import WorkflowRunner
 
@@ -75,7 +76,7 @@ def login_to_ecr(region="us-east-1"):
 class StateExecutionStrategy(ABC):
     @abstractmethod
     def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str = None) -> TestStateInputTypeDefSlim:
+                context: str = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
         """Should return a dict (the raw result) or None if test_state should handle it."""
         pass
 
@@ -122,7 +123,7 @@ class BatchImageStrategy(StateExecutionStrategy):
             data = Path(tmpdir).joinpath("output.json").read_text()
         return data
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None):
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
         s3_out = f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
 
         overrides = self._get_after_arguments_overrides(orchestrator, state_def, input_data, context)
@@ -137,7 +138,7 @@ class BatchImageStrategy(StateExecutionStrategy):
 # --- 2. Implementation: Batch Strategy ---
 class LocalBatchImageStrategy(StateExecutionStrategy):
     def __init__(self, s3_bucket, target_name, bake_file, execution_id=None, volumes=None, variables=None,
-                 user=None, base_dir: str = None):
+                 user=None, base_dir:str=None):
         self.s3_bucket = s3_bucket
         self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
         self.target_name = target_name
@@ -147,7 +148,7 @@ class LocalBatchImageStrategy(StateExecutionStrategy):
         self.volumes = volumes
         self.variables = variables or dict()
         self.user = user
-        self.base_dir = base_dir if base_dir else Path(__file__).parent
+        self.base_dir=base_dir
 
     def _get_after_arguments_overrides(self, orchestrator, state_def, input_data, context):
         response = orchestrator.client.test_state(
@@ -191,7 +192,7 @@ class LocalBatchImageStrategy(StateExecutionStrategy):
             data = Path(tmpdir).joinpath("output.json").read_text()
         return data
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None):
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
         target = self.target_name
         s3_out = f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
         os.environ["BUILDX_BAKE_ENTITLEMENTS_FS"] = "0"
@@ -213,7 +214,7 @@ class GetLatestConfigurationStrategy(StateExecutionStrategy):
             appconfigdata_client = boto3.client("appconfigdata", region_name="us-east-1")
         self.appconfigdata_client = appconfigdata_client
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context: str = "{}"):
+    def execute(self, state_name, state_def, input_data, orchestrator, context: str = "{}", parent_path=""):
         appconfigdata_client = self.appconfigdata_client
         response = appconfigdata_client.start_configuration_session(
             ApplicationIdentifier="unigen_pipeline",
@@ -237,7 +238,7 @@ class StaticMockResponseStrategy(StateExecutionStrategy):
     def __init__(self, result: str):
         self.result = result
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None):
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
         kwargs = {
             "mock": {'result': self.result},
             "context": context
@@ -271,7 +272,7 @@ class BatchJobResponseStrategy(StateExecutionStrategy):
         )
         return json.loads(response["inspectionData"]["afterArguments"])["ContainerOverrides"]
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None):
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
         container_overrides = self._get_after_arguments_overrides(orchestrator, state_def, input_data, context)
         environment = [
             KeyValuePairTypeDef(name=env["Name"], value=env["Value"])
@@ -304,7 +305,8 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
         pass
 
     def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str = None) -> TestStateInputTypeDefSlim:
+                context: str = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
+
         mock_mapping = orchestrator.mock_mapping
         items = self.get_items(input_data)
         response = orchestrator.client.test_state(
@@ -314,12 +316,13 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
             variables=json.dumps(orchestrator.variables),
             input=json.dumps(input_data),
             mock={
-                "result": json.dumps(items)
+                "result":json.dumps(items)
             }
         )
 
         items_ = json.loads(response["inspectionData"]["afterItemSelector"])
-        resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping) for item
+        new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
+        resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping, parent_path=new_parent_path) for item
                 in items_]
         return {"mock": {"result": json.dumps(resp)}, "context": context}
 
@@ -328,22 +331,20 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
 class StandardFlowStrategy(StateExecutionStrategy):
     """Handles Map, Parallel, and Nested SMs via recursion."""
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, mock_mapping=None):
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, mock_mapping=None, parent_path=""):
         state_type = state_def.get("Type")
         resource = state_def.get("Resource", "")
 
         if "states:startExecution" in resource:
-            resp = orchestrator.run_sub_machine(orchestrator.get_asl(state_name), input_data, mock_mapping=mock_mapping)
             result = {
                 "OutputDetails": {
-                    "Included": True
+                    "Included": False
                 },
                 "Input": json.dumps(input_data),
-                "Output": json.dumps(resp),
                 "ExecutionArn": "arn:aws:states:us-east-1:000000000000:execution:H5ad2Prod:GSE15471_affy_1769015448_1769015654669",
                 "RedriveCount": 0,
                 "InputDetails": {
-                    "Included": True
+                    "Included": False
                 },
                 "RedriveStatus": "NOT_REDRIVABLE",
                 "RedriveStatusReason": "Execution is SUCCEEDED and cannot be redriven",
@@ -352,10 +353,28 @@ class StandardFlowStrategy(StateExecutionStrategy):
                 "Status": "SUCCEEDED",
                 "StopDate": "1769015943200"
             }
-            return {"mock": {"result": json.dumps(result)}, "context": context}
+            response = orchestrator.client.test_state(
+                definition=json.dumps(state_def),
+                roleArn=orchestrator.role_arn,
+                inspectionLevel="TRACE",
+                variables=json.dumps(orchestrator.variables),
+                input=json.dumps(input_data),
+                mock={
+                    "result": json.dumps(result)
+                }
+            )
+            if response.get('status') == 'FAILED':
+                raise RuntimeError(f"State {state_name} failed: {response.get('error')}\n{response.get('cause')}")
+
+            input_data_to_machine = json.loads(response["inspectionData"]["afterArguments"])["Input"]
+            new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
+            resp = orchestrator.run_sub_machine(orchestrator.get_asl(state_name), input_data_to_machine, mock_mapping=mock_mapping, parent_path=new_parent_path)
+            result["Output"] = json.dumps(resp)
+            return {"mock": {"result": result["Output"], "fieldValidationMode":"PRESENT"}, "context": context}
 
         if state_type == "Parallel":
-            resp = [orchestrator.run_sub_machine(b, input_data, mock_mapping=mock_mapping) for b in
+            new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
+            resp = [orchestrator.run_sub_machine(b, input_data, mock_mapping=mock_mapping, parent_path=new_parent_path) for b in
                     state_def.get("Branches", [])]
             return {"mock": {"result": json.dumps(resp)}, "context": context}
 
