@@ -3,14 +3,15 @@
 import json
 from pathlib import Path
 from typing import Any, Final
+
 import boto3
+from typing_extensions import TypedDict
 from mypy_boto3_stepfunctions import SFNClient
 from mypy_boto3_stepfunctions.type_defs import (
     HistoryEventTypeDef,
     DescribeExecutionOutputTypeDef,
     MockInputTypeDef,
 )
-from typing_extensions import TypedDict
 
 from .history import ExecutionHistory
 
@@ -19,12 +20,6 @@ class AllOutput(TypedDict, total=False):
     mock: MockInputTypeDef
     type: str
     task: bool
-
-
-RESOURCE_OUTPUT_PATTERNS: Final[dict[str, tuple[str, str]]] = {
-    "arn:aws:states:::states:startExecution.sync:2": ("$states.result.Output", "$parse($states.result.Output)"),
-    "arn:aws:states:::lambda:invoke": ("$states.result.Payload", "$parse($states.result.Payload)")
-}
 
 
 def _create_map_state_output(history: ExecutionHistory, state_name: str) -> AllOutput:
