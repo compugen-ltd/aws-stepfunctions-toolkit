@@ -3,99 +3,77 @@ import logging
 import json
 from pathlib import Path
 
-from aws_stepfunctions_toolkit.workflow_runner.strategies import LocalBatchImageStrategy, GetLatestConfigurationStrategy, \
-    StaticMockResponseStrategy
+import pytest
+from aws_stepfunctions_toolkit.workflow_runner.strategies import LocalBatchImageStrategy, StaticMockResponseStrategy
 from aws_stepfunctions_toolkit.workflow_runner.workflow_runner import WorkflowRunner
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
+THIS_DIR = Path(__file__).parent
+DEFINITIONS_DIR = THIS_DIR.joinpath("asl_definitions")
 
-def test_example(
-        bulk_not_raw_input, definitions: dict[str, str], tmp_path: Path
+@pytest.fixture
+def definitions() -> dict[str, dict]:
+    return {
+        "main": json.loads((DEFINITIONS_DIR / "main.asl.json").read_text()),
+        "child": json.loads((DEFINITIONS_DIR / "child.asl.json").read_text())
+    }
+
+@pytest.fixture
+def runner_input() -> dict:
+    return {"key":"val"}
+
+
+def test_example_1(
+        runner_input, definitions: dict[str, dict], tmp_path: Path
 ):
     logger.debug(f"{definitions.keys()=}")
-    workfolder = "/Rnd/supplementary/GSE15471"
+    workfolder = "/data"
     variables = {"workfolder": workfolder}
 
     volumes = [
         (str(tmp_path), workfolder),
     ]
-    bake_file = "/home/ubuntu/scripts/pycharmProjects/unigen_pipeline/docker-bake.hcl"
+
+    bake_file = THIS_DIR.joinpath("docker-bake.hcl")
 
     strategy_mapping = {
-        "Batch SubmitJob - Copy Source 2": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "h5ad_2_prod",
+        "example_batch_1": LocalBatchImageStrategy(
+            "placeholder",
+            "example_batch_1",
             bake_file,
             volumes=volumes,
             variables=variables
         ),
-        "Batch SubmitJob - H5ad2prod - Misc": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "h5ad_2_prod",
-            bake_file,
-            volumes=volumes,
-            variables=variables
-        ),
-        "GetLatestConfiguration": GetLatestConfigurationStrategy(),
-        "Batch SubmitJob - H5ad2prod - Check Gene Symbol": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "h5ad_2_prod",
-            bake_file,
-            volumes=volumes,
-            variables=variables
-        ),
-        "Batch SubmitJob - H5ad2prod - Add Gene Symbols": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "gene_symbols",
-            bake_file,
-            volumes=volumes,
-            variables=variables
-        ),
-        "Batch SubmitJob - H5ad2prod - Create Annotations": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "h5ad_2_prod",
-            bake_file,
-            user=f"{os.getuid()}:{os.getgid()}",
-            volumes=volumes,
-            variables=variables
-        ),
-        "Batch SubmitJob - H5ad2prod - Add Annotations": LocalBatchImageStrategy(
-            "royassis_bucket",
-            "h5ad_2_prod",
-            bake_file,
-            volumes=volumes,
-            variables=variables
-        ),
-        "DescribeJobDefinitions": StaticMockResponseStrategy(
+        "example_batch_2": StaticMockResponseStrategy(
             json.dumps(
                 {
                     "JobDefinitions": [{
-                        "JobDefinitionArn": "arn:aws:batch:us-east-1:000000000000:job-definition/PostNewDatasetBatchJobDefinition:35",
-                        "JobDefinitionName": "PostNewDatasetBatchJobDefinition",
-                        "Revision": 35,
+                        "JobDefinitionArn": "arn:aws:batch:us-east-1:${accountId}:job-definition/example_batch_1:1",
+                        "JobDefinitionName": "example_batch_1",
+                        "Revision": 1,
                         "Type": "container"
                     }]
                 }
             )
         ),
-        "Batch SubmitJob - H5ad2prod - Deploy": StaticMockResponseStrategy(
+        "child-flow": StaticMockResponseStrategy(
             json.dumps(
-                {"datasetLocation": "s3://nextgen-tiledb-data-bucket/new/bulk/GSE15471_affy"}
+                {"datasetLocation": "/tmp"}
             )
-        ),
-        "Batch SubmitJob - Cp to h5": StaticMockResponseStrategy(json.dumps({}))
+        )
     }
 
+    role_arn = os.environ.get("ROLE_ARN")
     runner = WorkflowRunner(
-        role_arn="arn:aws:iam::000000000000:role/unigen-state-machine-role",
+        role_arn=role_arn,
         asl_registry={
-            "main": json.loads(definitions["UnigenStateMachine"]),
-            "Step Functions StartExecution - H5ad To Prod": json.loads(definitions["H5ad2Prod"])
+            "main": definitions["main"],
+            "child-flow": definitions["child"]
         },
         variables=variables,
         mock_mapping=strategy_mapping
     )
 
-    runner.start(bulk_not_raw_input, strategy_mapping)
+    runner.start(runner_input, strategy_mapping)

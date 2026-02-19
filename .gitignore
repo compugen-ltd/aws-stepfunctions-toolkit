@@ -25,3 +25,5 @@ requirements.txt
 
 /data
 /.vscode/settings.json
+
+!example.env

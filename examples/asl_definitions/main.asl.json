@@ -2,7 +2,7 @@
     "Comment": "A description of my state machine",
     "StartAt": "example_batch_1",
     "States": {
-        "child-flow": {
+        "child": {
             "Type": "Task",
             "Resource": "arn:aws:states:::states:startExecution.sync:2",
             "Next": "example_lambda_1",
@@ -59,7 +59,7 @@
             }
         },
         "example_batch_2": {
-            "Next": "child-flow",
+            "Next": "child",
             "Resource": "arn:aws:states:::batch:submitJob.sync",
             "Type": "Task",
             "QueryLanguage": "JSONata",

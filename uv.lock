@@ -113,9 +113,18 @@ dependencies = [
     { name = "boto3" },
     { name = "boto3-stubs", extra = ["stepfunctions"] },
     { name = "jmespath" },
+    { name = "mypy-boto3-appconfigdata" },
+    { name = "mypy-boto3-batch" },
+    { name = "mypy-boto3-s3" },
     { name = "pydantic-settings" },
+    { name = "python-on-whales" },
     { name = "typer" },
     { name = "typing-extensions" },
+]
+
+[package.optional-dependencies]
+examples = [
+    { name = "pytest" },
 ]
 
 [package.dev-dependencies]
@@ -133,10 +142,16 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.42.12" },
     { name = "boto3-stubs", extras = ["stepfunctions"], specifier = ">=1.42.12" },
     { name = "jmespath", specifier = ">=1.0.0" },
+    { name = "mypy-boto3-appconfigdata", specifier = ">=1.42.3" },
+    { name = "mypy-boto3-batch", specifier = ">=1.42.47" },
+    { name = "mypy-boto3-s3", specifier = ">=1.42.37" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
+    { name = "pytest", marker = "extra == 'examples'", specifier = ">=8.0.0" },
+    { name = "python-on-whales", specifier = ">=0.80.0" },
     { name = "typer", specifier = ">=0.20.0" },
     { name = "typing-extensions", specifier = ">=4.9.0" },
 ]
+provides-extras = ["examples"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -456,6 +471,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6f/6d/0703ccc57f3a7233505399edb88de3cbd678da106337b9fcde432b65ed60/idna-3.11.tar.gz", hash = "sha256:795dafcc9c04ed0c1fb032c2aa73654d8e8c5023a7df64a53f39190ada629902", size = 194582, upload-time = "2025-10-12T14:55:20.501Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0e/61/66938bbb5fc52dbdf84594873d5b51fb1f7c7794e9c0f5bd885f30bc507b/idna-3.11-py3-none-any.whl", hash = "sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea", size = 71008, upload-time = "2025-10-12T14:55:18.883Z" },
+]
+
+[[package]]
+name = "iniconfig"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730", size = 20503, upload-time = "2025-10-18T21:55:43.219Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484, upload-time = "2025-10-18T21:55:41.639Z" },
 ]
 
 [[package]]
@@ -853,6 +877,33 @@ wheels = [
 ]
 
 [[package]]
+name = "mypy-boto3-appconfigdata"
+version = "1.42.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/c2/23795992847b41b209390965d5dec82ae6b81dffbff7245b406dd5e1c4cc/mypy_boto3_appconfigdata-1.42.3.tar.gz", hash = "sha256:595e36e9f477205916e1f11d28c6c335d606a20e55bcb793a43a4b48a4b2b32d", size = 15019, upload-time = "2025-12-04T20:55:30.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/b6/634ad70a4c740be3f61ab75f1c3f22a67749d16a4426c858cb3f8ed73ced/mypy_boto3_appconfigdata-1.42.3-py3-none-any.whl", hash = "sha256:3ef47224643a511bd217a92c3360cccf39be8393ed218a199555bc0592ede64f", size = 18096, upload-time = "2025-12-04T20:55:26.051Z" },
+]
+
+[[package]]
+name = "mypy-boto3-batch"
+version = "1.42.47"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/02/31b26c14b048786bfc055856f744b028a9c2c74212dc440b47079cc8d450/mypy_boto3_batch-1.42.47.tar.gz", hash = "sha256:03c7cbbf485cc7a7e87e77fcd3b349fc58cb2c3c0e031dc11c51bc0a669ee778", size = 35210, upload-time = "2026-02-11T21:13:26.979Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6c/57/0e3009854e4363c948985a4fc6e1dbec306383d5e37f9cdc1eddb962b16e/mypy_boto3_batch-1.42.47-py3-none-any.whl", hash = "sha256:8c3d6483e153102ab91fa189b05bae12123a2aadecf8d34f9cd3388cef5c3fba", size = 42270, upload-time = "2026-02-11T21:08:34.934Z" },
+]
+
+[[package]]
+name = "mypy-boto3-s3"
+version = "1.42.37"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/41/44066f4cd3421bacb6aad4ec7b1da8d0f8858560e526166db64d95fa7ad7/mypy_boto3_s3-1.42.37.tar.gz", hash = "sha256:628a4652f727870a07e1c3854d6f30dc545a7dd5a4b719a2c59c32a95d92e4c1", size = 76317, upload-time = "2026-01-28T20:51:52.971Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/06/cb6050ecd72f5fa449bac80ad1a4711719367c4f545201317f36e3999784/mypy_boto3_s3-1.42.37-py3-none-any.whl", hash = "sha256:7c118665f3f583dbfde1013ce47908749f9d2a760f28f59ec65732306ee9cec9", size = 83439, upload-time = "2026-01-28T20:51:49.99Z" },
+]
+
+[[package]]
 name = "mypy-boto3-stepfunctions"
 version = "1.42.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1029,6 +1080,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pluggy"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
 name = "poethepoet"
 version = "0.38.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1173,6 +1233,22 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest"
+version = "9.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "iniconfig" },
+    { name = "packaging" },
+    { name = "pluggy" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/db/7ef3487e0fb0049ddb5ce41d3a49c235bf9ad299b6a25d5780a89f19230f/pytest-9.0.2.tar.gz", hash = "sha256:75186651a92bd89611d1d9fc20f0b4345fd827c41ccd5c299a868a05d70edf11", size = 1568901, upload-time = "2025-12-06T21:30:51.014Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/ab/b3226f0bd7cdcf710fbede2b3548584366da3b19b5021e74f5bde2a8fa3f/pytest-9.0.2-py3-none-any.whl", hash = "sha256:711ffd45bf766d5264d487b917733b453d917afd2b0ad65223959f59089f875b", size = 374801, upload-time = "2025-12-06T21:30:49.154Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -1200,6 +1276,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/29/bf/eca6a3d43db1dae7070f70e160ab20b807627ba953663ba07928cdd3dc58/python_json_logger-4.0.0.tar.gz", hash = "sha256:f58e68eb46e1faed27e0f574a55a0455eecd7b8a5b88b85a784519ba3cff047f", size = 17683, upload-time = "2025-10-06T04:15:18.984Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/e5/fecf13f06e5e5f67e8837d777d1bc43fac0ed2b77a676804df5c34744727/python_json_logger-4.0.0-py3-none-any.whl", hash = "sha256:af09c9daf6a813aa4cc7180395f50f2a9e5fa056034c9953aec92e381c5ba1e2", size = 15548, upload-time = "2025-10-06T04:15:17.553Z" },
+]
+
+[[package]]
+name = "python-on-whales"
+version = "0.80.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/17/8e/0f76b8ccd44d7acaeb2ef15109b039a00cee5df9935249c1aa704e749f4a/python_on_whales-0.80.0.tar.gz", hash = "sha256:0f18dda93a621dc34c5c26d0dbdc20003dca07a02114c4ce60910c4afb12c1ac", size = 114918, upload-time = "2026-01-10T18:00:56.207Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/d9/7dc70cfd792b420ccbdb249be4a43e949b5c151120b7abfdcacd93e37b2b/python_on_whales-0.80.0-py3-none-any.whl", hash = "sha256:3a7207899e5189695e54859a4c49461306c67fe8545a7eb53f884e342550c37d", size = 119194, upload-time = "2026-01-10T18:00:54.776Z" },
 ]
 
 [[package]]

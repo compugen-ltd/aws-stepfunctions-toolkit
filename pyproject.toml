@@ -18,6 +18,15 @@ dependencies = [
     "typer>=0.20.0",
     "typing-extensions>=4.9.0",
     "jmespath>=1.0.0",
+    "mypy-boto3-s3>=1.42.37",
+    "mypy-boto3-appconfigdata>=1.42.3",
+    "python-on-whales>=0.80.0",
+    "mypy-boto3-batch>=1.42.47",
+]
+
+[project.optional-dependencies]
+examples = [
+    "pytest>=8.0.0",
 ]
 
 [project.scripts]
