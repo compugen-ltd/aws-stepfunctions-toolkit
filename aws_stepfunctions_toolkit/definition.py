@@ -142,7 +142,7 @@ class DefinitionIterator:
         self.definition = definition
     
     @classmethod
-    def from_file(cls, file_path: str) -> 'DefinitionIterator':
+    def from_file(cls, file_path: str | Path) -> 'DefinitionIterator':
         """Create iterator from JSON file."""
         with open(file_path) as f:
             definition = json.load(f)
