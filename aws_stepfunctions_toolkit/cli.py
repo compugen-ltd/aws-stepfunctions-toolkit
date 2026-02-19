@@ -39,5 +39,9 @@ def generate_mock(
     typer.echo(f"Files created: history.json, input.json, state_outputs.json")
 
 
-if __name__ == "__main__":
+def main():
     app()
+
+if __name__ == "__main__":
+    main()
+
