@@ -81,3 +81,47 @@ def test_example_1(
     )
 
     runner.start(runner_input, strategy_mapping)
+
+
+def test_example_2(
+        runner_input, definitions: dict[str, dict], tmp_path: Path
+):
+    logger.debug(f"{definitions.keys()=}")
+    workfolder = "/data"
+    variables = {"workfolder": workfolder}
+
+    volumes = [
+        (str(tmp_path), workfolder),
+    ]
+
+    bake_file = THIS_DIR.joinpath("docker-bake.hcl")
+
+    strategy_mapping = {
+        "example_lambda_1": StaticMockResponseStrategy(
+            json.dumps({"result": "result"})
+        ),
+        "example_batch_1": LocalBatchImageStrategy(
+            "placeholder",
+            "example_batch_1",
+            bake_file,
+            volumes=volumes,
+            variables=variables,
+            base_dir=str(THIS_DIR)
+        ),
+        "example_batch_2": StaticMockResponseStrategy(
+            json.dumps({"result": "result"})
+        )
+    }
+
+    role_arn = os.environ.get("ROLE_ARN")
+    runner = WorkflowRunner(
+        role_arn=role_arn,
+        asl_registry={
+            "main": definitions["parent"],
+            "child-flow": definitions["child"]
+        },
+        variables=variables,
+        mock_mapping=strategy_mapping
+    )
+
+    runner.start(runner_input, strategy_mapping)
