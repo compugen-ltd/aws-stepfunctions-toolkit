@@ -54,21 +54,22 @@ def test_example_1(
             base_dir=str(THIS_DIR)
         ),
         "example_batch_2": StaticMockResponseStrategy(
-            json.dumps(
-                {
-                    "JobDefinitions": [{
-                        "JobDefinitionArn": "arn:aws:batch:us-east-1:${accountId}:job-definition/example_batch_1:1",
-                        "JobDefinitionName": "example_batch_1",
-                        "Revision": 1,
-                        "Type": "container"
-                    }]
-                }
-            )
+            json.dumps({
+                "JobDefinitions": [{
+                    "JobDefinitionArn": "arn:aws:batch:us-east-1:${accountId}:job-definition/example_batch_2:1",
+                    "JobDefinitionName": "example_batch_2",
+                    "Revision": 1,
+                    "Type": "container"
+                }]
+            })
         ),
         "child_flow": StaticMockResponseStrategy(
-            json.dumps(
-                {"datasetLocation": "/tmp"}
-            )
+            json.dumps({
+                "ExecutionArn": "ExecutionArn",
+                "StartDate": "1234567890",
+                "StateMachineArn": "StateMachineArn",
+                "Status" : "SUCCEEDED"
+            })
         )
     }
 
