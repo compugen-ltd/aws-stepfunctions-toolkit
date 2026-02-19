@@ -65,7 +65,7 @@ def test_example_1(
                 }
             )
         ),
-        "child-flow": StaticMockResponseStrategy(
+        "child_flow": StaticMockResponseStrategy(
             json.dumps(
                 {"datasetLocation": "/tmp"}
             )

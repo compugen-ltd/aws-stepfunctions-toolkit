@@ -2,14 +2,14 @@
     "Comment": "A description of my state machine",
     "StartAt": "example_batch_1",
     "States": {
-        "child": {
+        "child_flow": {
             "Type": "Task",
             "Resource": "arn:aws:states:::states:startExecution.sync:2",
             "Next": "example_lambda_1",
             "QueryLanguage": "JSONata",
             "Output": "{% $merge([$states.result.Output, $states.input]) %}",
             "Arguments": {
-                "StateMachineArn": "${child}",
+                "StateMachineArn": "${child_flow}",
                 "Input": "{% $merge([$states.input, {'AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID':$states.context.Execution.Id}]) %}",
                 "Name": "{% $states.context.Execution.Name & '_' & $millis() %}"
             }
@@ -56,7 +56,7 @@
             "Output": "{% $merge([$states.result.Output, $states.input]) %}"
         },
         "example_batch_2": {
-            "Next": "child",
+            "Next": "child_flow",
             "Resource": "arn:aws:states:::batch:submitJob.sync",
             "Type": "Task",
             "QueryLanguage": "JSONata",
