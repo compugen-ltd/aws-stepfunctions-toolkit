@@ -56,7 +56,7 @@ class WorkflowRunner:
         self.variables = variables or dict()
         self.mock_mapping = mock_mapping
 
-    def _get_context_for_state(self, state_def: dict, state_input) -> str:
+    def _get_context_for_state(self, state_def: dict, state_input:dict, state_name:str) -> str:
         base_context = {
             "Execution": {
                 "Id": "String",
@@ -69,8 +69,8 @@ class WorkflowRunner:
             },
             "State": {
                 "EnteredTime": "2025-12-14T18:00:00Z",
-                "Name": "String",
-                "RetryCount": 12
+                "Name": state_name,
+                "RetryCount": 1
             },
             "StateMachine": {
                 "Id": "String",
@@ -105,19 +105,19 @@ class WorkflowRunner:
             if hierarchical_key in mock_mapping:
                 raw_result = mock_mapping[hierarchical_key].execute(
                     current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
             elif current_state in mock_mapping:
                 raw_result = mock_mapping[current_state].execute(
                     current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
             else:
                 raw_result = self.default_strategy.execute(
                     current_state, state_def, data, self, mock_mapping=mock_mapping,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
 
