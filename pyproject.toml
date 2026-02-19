@@ -27,6 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 examples = [
     "pytest>=8.0.0",
+    "aws_lambda_powertools"
 ]
 
 [project.scripts]

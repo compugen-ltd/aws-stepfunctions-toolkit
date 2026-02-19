@@ -7,7 +7,7 @@
             "Resource": "arn:aws:states:::states:startExecution.sync:2",
             "Next": "example_lambda_1",
             "QueryLanguage": "JSONata",
-            "Output": "{% $merge([$states.result.Output, $states.input] %}",
+            "Output": "{% $merge([$states.result.Output, $states.input]) %}",
             "Arguments": {
                 "StateMachineArn": "${child}",
                 "Input": "{% $merge([$states.input, {'AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID':$states.context.Execution.Id}]) %}",
@@ -53,10 +53,7 @@
                     ]
                 }
             },
-            "Output": "{% $merge([$states.result.Output, $states.input] %}",
-            "Parameters": {
-                "JobName": "example_batch_1"
-            }
+            "Output": "{% $merge([$states.result.Output, $states.input] %}"
         },
         "example_batch_2": {
             "Next": "child",
@@ -97,10 +94,7 @@
                     ]
                 }
             },
-            "Output": "{% $merge([$states.result.Output, $states.input] %}",
-            "Parameters": {
-                "JobName": "example_batch_2"
-            }
+            "Output": "{% $merge([$states.result.Output, $states.input]) %}"
         },
         "example_lambda_1": {
             "End": true,
@@ -113,7 +107,7 @@
                 },
                 "FunctionName": "arn:aws:lambda:us-east-1:${accountId}:function:example_lambda_1"
             },
-            "Output": "{% $merge([$states.result.Output, $states.input] %}"
+            "Output": "{% $merge([$states.result.Output, $states.input]) %}"
         }
     }
 }
