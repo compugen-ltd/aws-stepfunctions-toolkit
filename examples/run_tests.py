@@ -45,6 +45,9 @@ def test_example_1(
     bake_file = THIS_DIR.joinpath("docker-bake.hcl")
 
     strategy_mapping = {
+        "example_lambda_1": StaticMockResponseStrategy(
+            json.dumps({"result": "result"})
+        ),
         "example_batch_1": LocalBatchImageStrategy(
             "placeholder",
             "example_batch_1",
@@ -54,21 +57,14 @@ def test_example_1(
             base_dir=str(THIS_DIR)
         ),
         "example_batch_2": StaticMockResponseStrategy(
-            json.dumps({
-                "JobDefinitions": [{
-                    "JobDefinitionArn": "arn:aws:batch:us-east-1:${accountId}:job-definition/example_batch_2:1",
-                    "JobDefinitionName": "example_batch_2",
-                    "Revision": 1,
-                    "Type": "container"
-                }]
-            })
+            json.dumps({"result": "result"})
         ),
         "child_flow": StaticMockResponseStrategy(
             json.dumps({
                 "ExecutionArn": "ExecutionArn",
                 "StartDate": "1234567890",
                 "StateMachineArn": "StateMachineArn",
-                "Status" : "SUCCEEDED"
+                "Status": "SUCCEEDED"
             })
         )
     }
