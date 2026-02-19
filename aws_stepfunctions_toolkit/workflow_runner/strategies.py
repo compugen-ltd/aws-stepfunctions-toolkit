@@ -18,8 +18,6 @@ from mypy_boto3_batch.client import BatchClient
 from mypy_boto3_batch.type_defs import ContainerOverridesTypeDef, KeyValuePairTypeDef
 from mypy_boto3_s3.client import S3Client
 
-from tests.config import PROJECT_ROOT
-
 if TYPE_CHECKING:
     from .workflow_runner import WorkflowRunner
 
@@ -139,7 +137,7 @@ class BatchImageStrategy(StateExecutionStrategy):
 # --- 2. Implementation: Batch Strategy ---
 class LocalBatchImageStrategy(StateExecutionStrategy):
     def __init__(self, s3_bucket, target_name, bake_file, execution_id=None, volumes=None, variables=None,
-                 user=None):
+                 user=None, base_dir: str = None):
         self.s3_bucket = s3_bucket
         self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
         self.target_name = target_name
@@ -149,6 +147,7 @@ class LocalBatchImageStrategy(StateExecutionStrategy):
         self.volumes = volumes
         self.variables = variables or dict()
         self.user = user
+        self.base_dir = base_dir if base_dir else Path(__file__).parent
 
     def _get_after_arguments_overrides(self, orchestrator, state_def, input_data, context):
         response = orchestrator.client.test_state(
@@ -170,7 +169,7 @@ class LocalBatchImageStrategy(StateExecutionStrategy):
             targets=[self.target_name],
             files=[self.bake_file],
             variables={
-                "BASE_DIR": str(PROJECT_ROOT)
+                "BASE_DIR": str(self.base_dir)
             },
             set={
                 "*.tags": f"{self.target_name}:latest",
@@ -306,7 +305,6 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
 
     def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
                 context: str = None) -> TestStateInputTypeDefSlim:
-
         mock_mapping = orchestrator.mock_mapping
         items = self.get_items(input_data)
         response = orchestrator.client.test_state(
@@ -316,7 +314,7 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
             variables=json.dumps(orchestrator.variables),
             input=json.dumps(input_data),
             mock={
-                "result":json.dumps(items)
+                "result": json.dumps(items)
             }
         )
 
