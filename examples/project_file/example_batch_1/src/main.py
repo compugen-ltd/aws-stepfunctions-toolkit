@@ -3,7 +3,6 @@ import sys
 import os
 import pydantic
 
-OUTPUT_DIR = os.environ["OUTPUT_DIR"]
 
 class Input(pydantic.BaseModel):
     data: str
