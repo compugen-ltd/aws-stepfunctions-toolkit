@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["awsbatch", "lambda"]
+  targets = ["example_batch_1", "example_batch_2", "example_lambda_1"]
 }
 
 variable "BASE_DIR" {
