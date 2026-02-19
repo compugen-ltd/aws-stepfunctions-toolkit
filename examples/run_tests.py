@@ -48,7 +48,7 @@ def test_example_1(
             bake_file,
             volumes=volumes,
             variables=variables,
-            base_dir = str(THIS_DIR.joinpath("project_file"))
+            base_dir = str(THIS_DIR)
         ),
         "example_batch_2": StaticMockResponseStrategy(
             json.dumps(
