@@ -25,7 +25,7 @@ AWS credentials + a region and an IAM role allowed to call `test_state` — see 
 
 ## Run it
 
-1. Set `ROLE_ARN` in [`run.py`](run.py) (`>>> **EDIT THIS** <<<`) to your `test_state` role.
+1. Set your `test_state` role: `export ROLE_ARN=arn:aws:iam::<account>:role/<your-test-state-role>` (or edit the default in [`run.py`](run.py)).
 2. Run it:
 
 ```bash
