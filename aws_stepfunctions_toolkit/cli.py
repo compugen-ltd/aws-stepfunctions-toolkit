@@ -10,7 +10,7 @@ from .testing import generate_mock_data
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SFN_", env_file=".env", extra="ignore")
-    region: str = "us-east-1"
+    region: Optional[str] = None
     profile: Optional[str] = None
 
 
@@ -21,11 +21,12 @@ app = typer.Typer(help="AWS Step Functions Toolkit - Tools for managing definiti
 def generate_mock(
     execution_arn: str = typer.Argument(..., help="Step Functions execution ARN"),
     output_dir: Optional[str] = typer.Option(None, "--output-dir", "-o", help="Output directory for generated files"),
-    region: Optional[str] = typer.Option("us-east-1", "--region", "-r", help="AWS region"),
+    region: Optional[str] = typer.Option(None, "--region", "-r", help="AWS region"),
 ):
     """Generate mock data files from Step Functions execution."""
+    from .workflow_runner._common import resolve_region
     settings = Settings()
-    actual_region = region or settings.region
+    actual_region = resolve_region(region or settings.region)
 
     sfn_client = boto3.client('stepfunctions', region_name=actual_region)
 

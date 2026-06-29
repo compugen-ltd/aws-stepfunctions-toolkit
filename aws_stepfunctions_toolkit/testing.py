@@ -139,7 +139,8 @@ def generate_mock_data(execution_arn: str, output_dir: str | Path = None,
                       region: str = None, sfn_client: SFNClient = None) -> dict[str, Any]:
     """Generate mock data files from Step Functions execution."""
     if sfn_client is None:
-        sfn_client = boto3.client('stepfunctions', region_name=region)
+        from .workflow_runner._common import resolve_region
+        sfn_client = boto3.client('stepfunctions', region_name=resolve_region(region))
     
     if output_dir is None:
         execution_name = execution_arn.split(':')[-1]

@@ -4,14 +4,21 @@ import json
 from pathlib import Path
 
 import pytest
-from aws_stepfunctions_toolkit.workflow_runner.strategies import LocalBatchImageStrategy, StaticMockResponseStrategy
-from aws_stepfunctions_toolkit.workflow_runner.workflow_runner import WorkflowRunner
+from aws_stepfunctions_toolkit import (
+    WorkflowRunner,
+    DockerBatchStrategy,
+    DockerfileImage,
+    BakeImage,
+    StaticMockResponseStrategy,
+    CallableStrategy,
+)
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 THIS_DIR = Path(__file__).parent
 DEFINITIONS_DIR = THIS_DIR.joinpath("asl_definitions")
+PROJECT_FILE_DIR = THIS_DIR.joinpath("project_file")
 
 
 @pytest.fixture
@@ -34,6 +41,7 @@ def runner_input() -> dict:
 def test_example_1(
         runner_input, definitions: dict[str, dict], tmp_path: Path
 ):
+    """The easy path: build the batch container from a plain Dockerfile (no bake file)."""
     logger.debug(f"{definitions.keys()=}")
     workfolder = "/data"
     variables = {"workfolder": workfolder}
@@ -42,23 +50,18 @@ def test_example_1(
         (str(tmp_path), workfolder),
     ]
 
-    bake_file = THIS_DIR.joinpath("docker-bake.hcl")
-
     strategy_mapping = {
         "example_lambda_1": StaticMockResponseStrategy(
             json.dumps({"result": "result"})
         ),
-        "example_batch_1": LocalBatchImageStrategy(
-            "placeholder",
-            "example_batch_1",
-            bake_file,
+        "example_batch_1": DockerBatchStrategy(
+            s3_bucket="placeholder",
+            image_source=DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1")),
             volumes=volumes,
             variables=variables,
-            base_dir=str(THIS_DIR)
         ),
-        "example_batch_2": StaticMockResponseStrategy(
-            json.dumps({"result": "result"})
-        ),
+        # Define your own handler inline with a plain function — no subclassing.
+        "example_batch_2": CallableStrategy(lambda input_data: {"result": "result"}),
         "child_flow": StaticMockResponseStrategy(
             json.dumps({
                 "ExecutionArn": "ExecutionArn",
@@ -79,12 +82,13 @@ def test_example_1(
         mock_mapping=strategy_mapping
     )
 
-    runner.start(runner_input, strategy_mapping)
+    runner.start(runner_input)
 
 
 def test_example_2(
         runner_input, definitions: dict[str, dict], tmp_path: Path
 ):
+    """The advanced path: build the same container via docker buildx bake."""
     logger.debug(f"{definitions.keys()=}")
     workfolder = "/data"
     variables = {"workfolder": workfolder}
@@ -99,13 +103,15 @@ def test_example_2(
         "example_lambda_1": StaticMockResponseStrategy(
             json.dumps({"result": "result"})
         ),
-        "example_batch_1": LocalBatchImageStrategy(
-            "placeholder",
-            "example_batch_1",
-            bake_file,
+        "example_batch_1": DockerBatchStrategy(
+            s3_bucket="placeholder",
+            image_source=BakeImage(
+                bake_file=str(bake_file),
+                target="example_batch_1",
+                base_dir=str(THIS_DIR),
+            ),
             volumes=volumes,
             variables=variables,
-            base_dir=str(THIS_DIR)
         ),
         "example_batch_2": StaticMockResponseStrategy(
             json.dumps({"result": "result"})
@@ -126,4 +132,4 @@ def test_example_2(
         mock_mapping=strategy_mapping
     )
 
-    runner.start(runner_input, strategy_mapping)
+    runner.start(runner_input)

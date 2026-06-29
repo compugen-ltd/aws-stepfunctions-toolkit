@@ -14,7 +14,7 @@ def send_response(response):
     data = response.model_dump_json()
     if token := os.environ.get("TaskToken"):
         import boto3
-        client = boto3.client("stepfunctions", region_name="us-east-1")
+        client = boto3.client("stepfunctions", region_name=os.environ.get("AWS_REGION"))
         _ = client.send_task_success(
             taskToken=token,
             output=data,

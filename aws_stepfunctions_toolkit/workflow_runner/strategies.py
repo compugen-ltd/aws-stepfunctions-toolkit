@@ -4,222 +4,177 @@ import os
 import logging
 import json
 import uuid
-from abc import ABC, abstractmethod
-from typing import Final, TypedDict, NotRequired, TYPE_CHECKING
+import shutil
 import tempfile
+from abc import ABC, abstractmethod
 from pathlib import Path
-import base64
+from typing import Callable, TYPE_CHECKING
 
 import boto3
 from python_on_whales import docker
-from mypy_boto3_stepfunctions.type_defs import MockInputTypeDef
 from mypy_boto3_appconfigdata import AppConfigDataClient
 from mypy_boto3_batch.client import BatchClient
 from mypy_boto3_batch.type_defs import ContainerOverridesTypeDef, KeyValuePairTypeDef
 from mypy_boto3_s3.client import S3Client
 
-
 if TYPE_CHECKING:
     from .workflow_runner import WorkflowRunner
+
+from ._common import TestStateInputTypeDefSlim, resolve_region
+from .image_sources import ImageSource, BakeImage, login_to_ecr, get_codeartifact_token  # noqa: F401  (re-exported)
+from .models import DockerBatchConfig, StartExecutionResult
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
-RESOURCE_OUTPUT_PATTERNS: Final[dict[str, tuple[str, str]]] = {
-    "arn:aws:states:::states:startExecution.sync:2": ("$states.result.Output", "$parse($states.result.Output)"),
-    "arn:aws:states:::lambda:invoke": ("$states.result.Payload", "$parse($states.result.Payload)"),
-}
 
-TestStateInputTypeDef = TypedDict(
-    "TestStateInputTypeDef",
-    {
-        "mock": NotRequired[MockInputTypeDef],
-    },
-)
+def get_container_overrides(sfn_client, state_def: dict, role_arn: str, variables: dict,
+                            input_data: dict, context: str | None) -> dict:
+    """Use the test API to resolve a Batch task's ContainerOverrides (Command + Environment).
 
-TestStateInputTypeDefSlim = TypedDict(
-    "TestStateInputTypeDefSlim",
-    {
-        "mock": NotRequired[MockInputTypeDef],
-        "context": NotRequired[str],
-    },
-)
-
-
-def login_to_ecr(region="us-east-1"):
-    """Authenticate to ECR using python_on_whales"""
-    ecr_client = boto3.client('ecr', region_name=region)
-
-    # Get authorization token from ECR
-    response = ecr_client.get_authorization_token()
-    auth_data = response['authorizationData'][0]
-
-    # Decode the token (format is "username:password")
-    token = base64.b64decode(auth_data['authorizationToken']).decode()
-    username, password = token.split(':')
-
-    # Get the registry URL
-    registry = auth_data['proxyEndpoint'].replace('https://', '')
-
-    # Login using python_on_whales
-    docker.login(
-        server=registry,
-        username=username,
-        password=password
+    Runs ``test_state`` in TRACE mode with an empty mock so AWS evaluates the
+    state's Arguments/Parameters, then returns the resolved ``ContainerOverrides``.
+    """
+    response = sfn_client.test_state(
+        definition=json.dumps(state_def),
+        roleArn=role_arn,
+        variables=json.dumps(variables),
+        input=json.dumps(input_data),
+        inspectionLevel="TRACE",
+        context=context,
+        mock={'result': json.dumps({}), "fieldValidationMode": "PRESENT"}
     )
-
-    print(f"Successfully logged in to {registry}")
-    return registry
+    inspection = response.get("inspectionData", {})
+    after_args = inspection.get("afterArguments")
+    if not after_args:
+        raise RuntimeError(
+            f"test_state did not return afterArguments. "
+            f"inspectionData keys: {list(inspection.keys())}"
+        )
+    return json.loads(after_args)["ContainerOverrides"]
 
 
 # --- 1. Execution Strategy Interface ---
 class StateExecutionStrategy(ABC):
     @abstractmethod
     def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
-        """Should return a dict (the raw result) or None if test_state should handle it."""
+                context: str | None = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
         pass
 
 
-class BatchImageStrategy(StateExecutionStrategy):
-    def __init__(self, s3_bucket, image: str, execution_id=None, volumes=None, variables=None,
-                 user=None):
+class DockerBatchStrategy(StateExecutionStrategy):
+    """Runs a Batch (or any container) task locally via Docker.
+
+    The image is produced by a pluggable ``ImageSource`` (``DockerfileImage`` for a plain
+    Dockerfile build, ``PrebuiltImage`` for an existing/ECR image, ``BakeImage`` for
+    ``docker buildx bake``, or your own). This strategy only resolves the container's
+    Command/Environment from the state, runs the container, and reads its output.
+
+    The container is expected to write its result JSON to ``/tmp/output.json`` (the toolkit
+    mounts a writable temp dir at ``/tmp`` and injects ``OUTPUT_PATH``/``S3_OUTPUT_PATH``).
+    """
+
+    def __init__(self, s3_bucket: str, image_source: ImageSource, execution_id: str | None = None,
+                 volumes: list | None = None, variables: dict | None = None,
+                 user: str | None = None, gpus: str | None = None,
+                 extra_run_envs: dict | None = None, region: str | None = None,
+                 s3_client: S3Client | None = None):
+        if not isinstance(image_source, ImageSource):
+            raise TypeError(
+                "image_source must be an ImageSource (e.g. DockerfileImage, PrebuiltImage, BakeImage)"
+            )
         self.s3_bucket = s3_bucket
+        self.image_source = image_source
         self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
-        self.s3_client: S3Client = boto3.client('s3')
-        self.image = image
+        self.s3_client: S3Client = s3_client or boto3.client('s3', region_name=resolve_region(region))
         self.volumes = volumes
         self.variables = variables or dict()
         self.user = user
-        login_to_ecr()
+        self.gpus = gpus
+        self.extra_run_envs = extra_run_envs
 
-    def _get_after_arguments_overrides(self, orchestrator, state_def, input_data, context):
-        response = orchestrator.client.test_state(
-            definition=json.dumps(state_def),
-            roleArn=orchestrator.role_arn,
-            variables=json.dumps(self.variables),
-            input=json.dumps(input_data),
-            inspectionLevel="TRACE",
-            context=context,
-            mock={
-                'result': json.dumps({}),
-                "fieldValidationMode": "PRESENT"
-            }
-        )
-        return json.loads(response["inspectionData"]["afterArguments"])["ContainerOverrides"]
-
-    def _build_and_run_image(self, command, s3_out, extra_envs: dict):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chmod(tmpdir, 0o777)  # drwxrwxrwx
+    def _run_image(self, run_image: str, command, s3_out: str, extra_envs: dict) -> str:
+        tmpdir = tempfile.mkdtemp()
+        try:
+            os.chmod(tmpdir, 0o777)
             output_path = "/tmp/output.json"
-            docker.run(
-                image=self.image,
-                command=command,
-                envs={"S3_OUTPUT_PATH": s3_out, "OUTPUT_PATH": output_path} | extra_envs,
-                remove=True,
-                user=self.user,
-                volumes=self.volumes + [(str(tmpdir), "/tmp", "rw")],
-            )
+            run_kwargs = {
+                "image": run_image,
+                "command": command,
+                "envs": {"S3_OUTPUT_PATH": s3_out, "OUTPUT_PATH": output_path}
+                        | (self.extra_run_envs or {}) | extra_envs,
+                "remove": True,
+                "user": self.user,
+                "volumes": (self.volumes or []) + [(str(tmpdir), "/tmp", "rw")],
+            }
+            if self.gpus:
+                run_kwargs["gpus"] = self.gpus
+            docker.run(**run_kwargs)
             data = Path(tmpdir).joinpath("output.json").read_text()
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
         return data
 
     def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
         s3_out = f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
 
-        overrides = self._get_after_arguments_overrides(orchestrator, state_def, input_data, context)
+        overrides = get_container_overrides(
+            orchestrator.client, state_def, orchestrator.role_arn,
+            self.variables, input_data, context
+        )
         command = overrides["Command"]
         envs = {ele["Name"]: ele["Value"] for ele in overrides["Environment"]}
-        _ = envs.pop("TaskToken")
-        data = self._build_and_run_image(command, s3_out, envs)
+        envs.pop("TaskToken", None)
+
+        run_image = self.image_source.ensure_image()
+        data = self._run_image(run_image, command, s3_out, envs)
 
         return {"mock": {"result": data}, "context": context}
 
 
-# --- 2. Implementation: Batch Strategy ---
-class LocalBatchImageStrategy(StateExecutionStrategy):
-    def __init__(self, s3_bucket, target_name, bake_file, execution_id=None, volumes=None, variables=None,
-                 user=None, base_dir:str=None):
-        self.s3_bucket = s3_bucket
-        self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
-        self.target_name = target_name
-        self.bake_file = bake_file
-        self.s3_client: S3Client = boto3.client('s3')
-        # self.volumes = [(temp.name, "/Rnd/supplementary/GSE15471/GSE15471.h5ad")]
-        self.volumes = volumes
-        self.variables = variables or dict()
-        self.user = user
-        self.base_dir=base_dir
+BatchImageStrategy = DockerBatchStrategy
+LocalBatchImageStrategy = DockerBatchStrategy
 
-    def _get_after_arguments_overrides(self, orchestrator, state_def, input_data, context):
-        response = orchestrator.client.test_state(
-            definition=json.dumps(state_def),
-            roleArn=orchestrator.role_arn,
-            variables=json.dumps(self.variables),
-            input=json.dumps(input_data),
-            inspectionLevel="TRACE",
-            context=context,
-            mock={
-                'result': json.dumps({}),
-                "fieldValidationMode": "PRESENT"
-            }
-        )
-        return json.loads(response["inspectionData"]["afterArguments"])["ContainerOverrides"]
 
-    def _build_and_run_image(self, command, s3_out, extra_envs: dict):
-        docker.buildx.bake(
-            targets=[self.target_name],
-            files=[self.bake_file],
-            variables={
-                "BASE_DIR": str(self.base_dir)
-            },
-            set={
-                "*.tags": f"{self.target_name}:latest",
-                "*.args.ENVIRONMENT": "dev",
-            },
-            load=False
-        )
-        with tempfile.TemporaryDirectory() as tmpdir:
-            os.chmod(tmpdir, 0o777)  # drwxrwxrwx
-            output_path = "/tmp/output.json"
-            docker.run(
-                image=self.target_name,
-                command=command,
-                envs={"S3_OUTPUT_PATH": s3_out, "OUTPUT_PATH": output_path} | extra_envs,
-                remove=True,
-                user=self.user,
-                volumes=self.volumes + [(str(tmpdir), "/tmp", "rw")],
-            )
-            data = Path(tmpdir).joinpath("output.json").read_text()
-        return data
+# --- 2. Implementation: Callable (user-defined) Strategy ---
+class CallableStrategy(StateExecutionStrategy):
+    """Wrap a plain function as a strategy — the simplest way to define your own handler.
+
+    ``handler`` receives the state's input dict and returns the state's result either as a
+    dict/list (json-encoded for you) or as a pre-serialized JSON string.
+
+        CallableStrategy(lambda input_data: {"ok": True, "echo": input_data})
+    """
+
+    def __init__(self, handler: Callable[[dict], dict | list | str]):
+        self.handler = handler
 
     def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
-        target = self.target_name
-        s3_out = f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
-        os.environ["BUILDX_BAKE_ENTITLEMENTS_FS"] = "0"
-        print(f"🏗️  Batch: Baking & Running {target}")
-
-        overrides = self._get_after_arguments_overrides(orchestrator, state_def, input_data, context)
-        command = overrides["Command"]
-        envs = {ele["Name"]: ele["Value"] for ele in overrides["Environment"]}
-        _ = envs.pop("TaskToken")
-        data = self._build_and_run_image(command, s3_out, envs)
-
-        return {"mock": {"result": data}, "context": context}
+        result = self.handler(input_data)
+        if not isinstance(result, str):
+            result = json.dumps(result)
+        return {"mock": {'result': result}, "context": context}
 
 
-# --- 3. Implementation: Static Mock Strategy ---
+# --- 3. Implementation: AppConfig Strategy ---
 class GetLatestConfigurationStrategy(StateExecutionStrategy):
-    def __init__(self, appconfigdata_client: AppConfigDataClient = None):
+    """Resolves a state's result from AWS AppConfig (start session + get latest configuration)."""
+
+    def __init__(self, application: str, environment: str, configuration_profile: str,
+                 appconfigdata_client: AppConfigDataClient | None = None, region: str | None = None):
+        self.application = application
+        self.environment = environment
+        self.configuration_profile = configuration_profile
         if not appconfigdata_client:
-            appconfigdata_client = boto3.client("appconfigdata", region_name="us-east-1")
+            appconfigdata_client = boto3.client("appconfigdata", region_name=resolve_region(region))
         self.appconfigdata_client = appconfigdata_client
 
     def execute(self, state_name, state_def, input_data, orchestrator, context: str = "{}", parent_path=""):
         appconfigdata_client = self.appconfigdata_client
         response = appconfigdata_client.start_configuration_session(
-            ApplicationIdentifier="unigen_pipeline",
-            EnvironmentIdentifier="test",
-            ConfigurationProfileIdentifier="db",
+            ApplicationIdentifier=self.application,
+            EnvironmentIdentifier=self.environment,
+            ConfigurationProfileIdentifier=self.configuration_profile,
         )
 
         response = appconfigdata_client.get_latest_configuration(
@@ -227,53 +182,40 @@ class GetLatestConfigurationStrategy(StateExecutionStrategy):
         )
 
         data = response["Configuration"].read().decode("utf8")
-        kwargs = {
-            "mock": {'result': data},
-            "context": context
-        }
-        return kwargs
+        return {"mock": {'result': data}, "context": context}
 
 
+# --- 4. Implementation: Static Mock Strategy ---
 class StaticMockResponseStrategy(StateExecutionStrategy):
+    """Returns a fixed, caller-supplied JSON string as the state's result."""
+
     def __init__(self, result: str):
         self.result = result
 
     def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
-        kwargs = {
-            "mock": {'result': self.result},
-            "context": context
-        }
-        return kwargs
+        return {"mock": {'result': self.result}, "context": context}
 
 
+# --- 5. Implementation: Batch Job Submission Strategy ---
 class BatchJobResponseStrategy(StateExecutionStrategy):
-    def __init__(self, job_queue: str, job_definition: str, job_name: str = None, batch_client: BatchClient = None,
-                 variables: dict = None):
+    """Submits a real AWS Batch job (rather than running the container locally)."""
+
+    def __init__(self, job_queue: str, job_definition: str, job_name: str | None = None,
+                 batch_client: BatchClient | None = None, variables: dict | None = None,
+                 region: str | None = None):
         if not batch_client:
-            batch_client = boto3.client("batch", region_name="us-east-1")
+            batch_client = boto3.client("batch", region_name=resolve_region(region))
         self.client = batch_client
         self.job_queue = job_queue
         self.job_name = job_name or "sometestjob"
         self.job_definition = job_definition
         self.variables = variables or {}
 
-    def _get_after_arguments_overrides(self, orchestrator, state_def, input_data, context) -> dict:
-        response = orchestrator.client.test_state(
-            definition=json.dumps(state_def),
-            roleArn=orchestrator.role_arn,
-            variables=json.dumps(self.variables),
-            input=json.dumps(input_data),
-            inspectionLevel="TRACE",
-            context=context,
-            mock={
-                'result': json.dumps({}),
-                "fieldValidationMode": "PRESENT"
-            }
-        )
-        return json.loads(response["inspectionData"]["afterArguments"])["ContainerOverrides"]
-
     def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
-        container_overrides = self._get_after_arguments_overrides(orchestrator, state_def, input_data, context)
+        container_overrides = get_container_overrides(
+            orchestrator.client, state_def, orchestrator.role_arn,
+            self.variables, input_data, context
+        )
         environment = [
             KeyValuePairTypeDef(name=env["Name"], value=env["Value"])
             for env in container_overrides["Environment"]
@@ -288,24 +230,24 @@ class BatchJobResponseStrategy(StateExecutionStrategy):
                 command=container_overrides["Command"]
             )
         )
-        # Wait for task to end successfully
-        # Can also run this as a local image
-        # Read data from s3
 
         # TODO: get results from s3
-        # return
-
         return {}
 
 
+# --- 6. Implementation: Map Response Strategy ---
 class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
+    """Base for Map states: implement ``get_items`` to supply the items to iterate.
+
+    Each item is run through the Map's ItemProcessor via ``run_sub_machine``.
+    """
 
     @abstractmethod
     def get_items(self, input_data):
         pass
 
     def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
+                context: str | None = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
 
         mock_mapping = orchestrator.mock_mapping
         items = self.get_items(input_data)
@@ -316,18 +258,20 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
             variables=json.dumps(orchestrator.variables),
             input=json.dumps(input_data),
             mock={
-                "result":json.dumps(items)
+                "result": json.dumps(items)
             }
         )
+        if response.get("inspectionData", {}).get("afterItemSelector") is None:
+            raise RuntimeError(f"Expected afterItemSelector in inspectionData but got: {response.get('inspectionData')}")
 
-        items_ = json.loads(response["inspectionData"]["afterItemSelector"])
+        items_ = json.loads(response.get("inspectionData", {}).get("afterItemSelector", "[]"))
         new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
         resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping, parent_path=new_parent_path) for item
                 in items_]
         return {"mock": {"result": json.dumps(resp)}, "context": context}
 
 
-# --- 4. Implementation: Standard Flow Strategy ---
+# --- 7. Implementation: Standard Flow Strategy ---
 class StandardFlowStrategy(StateExecutionStrategy):
     """Handles Map, Parallel, and Nested SMs via recursion."""
 
@@ -336,23 +280,10 @@ class StandardFlowStrategy(StateExecutionStrategy):
         resource = state_def.get("Resource", "")
 
         if "states:startExecution" in resource:
-            result = {
-                "OutputDetails": {
-                    "Included": False
-                },
-                "Input": json.dumps(input_data),
-                "ExecutionArn": "arn:aws:states:us-east-1:000000000000:execution:H5ad2Prod:GSE15471_affy_1769015448_1769015654669",
-                "RedriveCount": 0,
-                "InputDetails": {
-                    "Included": False
-                },
-                "RedriveStatus": "NOT_REDRIVABLE",
-                "RedriveStatusReason": "Execution is SUCCEEDED and cannot be redriven",
-                "StartDate": "1769015654832",
-                "StateMachineArn": "arn:aws:states:us-east-1:000000000000:stateMachine:H5ad2Prod",
-                "Status": "SUCCEEDED",
-                "StopDate": "1769015943200"
-            }
+            # startExecution.sync:2 returns a wrapper with Output, Status, ExecutionArn, etc.
+            # We mock this wrapper to extract the transformed input via afterArguments,
+            # then recursively run the nested state machine and inject its output back.
+            result = StartExecutionResult(Input=json.dumps(input_data)).model_dump()
             response = orchestrator.client.test_state(
                 definition=json.dumps(state_def),
                 roleArn=orchestrator.role_arn,
@@ -368,9 +299,16 @@ class StandardFlowStrategy(StateExecutionStrategy):
 
             input_data_to_machine = json.loads(response["inspectionData"]["afterArguments"])["Input"]
             new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
-            resp = orchestrator.run_sub_machine(orchestrator.get_asl(state_name), input_data_to_machine, mock_mapping=mock_mapping, parent_path=new_parent_path)
+            sub_asl = orchestrator.get_asl(state_name)
+            if sub_asl is None:
+                raise RuntimeError(
+                    f"Sub-machine '{state_name}' not found in ASL registry. "
+                    f"Available: {list(orchestrator.asl_registry.keys())}. "
+                    f"Add it to the asl_registry when constructing WorkflowRunner."
+                )
+            resp = orchestrator.run_sub_machine(sub_asl, input_data_to_machine, mock_mapping=mock_mapping, parent_path=new_parent_path)
             result["Output"] = json.dumps(resp)
-            return {"mock": {"result": result["Output"], "fieldValidationMode":"PRESENT"}, "context": context}
+            return {"mock": {"result": result["Output"], "fieldValidationMode": "PRESENT"}, "context": context}
 
         if state_type == "Parallel":
             new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
@@ -384,4 +322,18 @@ class StandardFlowStrategy(StateExecutionStrategy):
                     in items]
             return {"mock": {"result": json.dumps(resp)}, "context": context}
 
-        return {}  # Fallback to default test_state behavior
+        return {}
+
+
+# --- 8. Helper: Build strategy mappings from DockerBatchConfig (bake convenience) ---
+def build_strategies(config: DockerBatchConfig) -> dict[str, DockerBatchStrategy]:
+    return {
+        state_name: DockerBatchStrategy(
+            s3_bucket=config.s3_bucket,
+            image_source=BakeImage(bake_file=config.bake_file, target=target_name),
+            volumes=config.volumes,
+            variables=config.variables,
+            user=config.user,
+        )
+        for state_name, target_name in config.target_mapping.items()
+    }
