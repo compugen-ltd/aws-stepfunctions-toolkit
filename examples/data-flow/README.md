@@ -18,12 +18,19 @@ Run it with input `{"order_id": 123, "amount": 100}` and you get:
 
 Below is exactly how the data gets there.
 
+## Requirements
+
+AWS credentials + a region and an IAM role allowed to call `test_state` — see the
+[Setup guide](../../docs/setup.md). No Docker.
+
 ## Run it
 
-1. **Install + run:** `uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py`
-   (or `pip install aws-stepfunctions-toolkit` then `python run.py`).
-2. **AWS setup:** credentials + a region and a `test_state` role — see the [Setup guide](../../docs/setup.md).
-3. Open [`run.py`](run.py) and set `ROLE_ARN` (`>>> **EDIT THIS** <<<`).
+1. Set `ROLE_ARN` in [`run.py`](run.py) (`>>> **EDIT THIS** <<<`) to your `test_state` role.
+2. Run it:
+
+```bash
+uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
+```
 
 ## Step by step: follow the data
 

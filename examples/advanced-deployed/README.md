@@ -5,9 +5,14 @@ pipeline **locally** — invoking the **real** Lambda for the `Enrich` step whil
 `ProcessLocally` Batch step as a **local script** (no Batch infra needed). `run.py` loads the
 **deployed** definition with `describe_state_machine`, so you're testing exactly what's deployed.
 
-> This is the one example that provisions AWS resources. It needs Docker? No — but it does create
-> a Lambda, an IAM role, and a state machine via CloudFormation, and it invokes the Lambda for
-> real. See the [Setup guide](../../docs/setup.md) for credentials.
+## Requirements
+
+- AWS credentials + a region — see the [Setup guide](../../docs/setup.md).
+- Permission to **create CloudFormation/IAM/Lambda/Step Functions resources** (this stack creates
+  a Lambda, two IAM roles, and a state machine).
+- A **deployed stack** (step 1 below) — `run.py` needs its outputs (`STATE_MACHINE_ARN`,
+  `FUNCTION_ARN`, `SFN_ROLE_ARN`) and **invokes the real Lambda**.
+- **No Docker** — the `ProcessLocally` step runs as a local subprocess.
 
 ## Files
 
@@ -42,8 +47,7 @@ pipeline **locally** — invoking the **real** Lambda for the `Enrich` step whil
 3. **Run** it:
 
    ```bash
-   pip install aws-stepfunctions-toolkit
-   python run.py
+   uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
    ```
 
 4. **Tear down** when done:

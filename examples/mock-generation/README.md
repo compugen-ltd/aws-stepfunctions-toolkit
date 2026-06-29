@@ -4,15 +4,19 @@ Capture a real, completed Step Functions execution and turn its per-state output
 you can replay locally — plus basic history inspection. See
 [CLI & history](../../docs/cli-and-history.md).
 
-> Unlike the other examples, this one reads a **real execution**, so there's no bundled ASL — you
-> point it at one of your own past executions. It needs AWS credentials + a region (see the
-> [Setup guide](../../docs/setup.md)) but **no** `role_arn` (it only reads the execution).
+## Requirements
+
+AWS credentials + a region (see the [Setup guide](../../docs/setup.md)) and a **real, completed
+execution ARN** of one of your own state machines. There's no bundled ASL, and **no `role_arn`**
+is needed — this only reads the execution. No Docker.
 
 ## What to do
 
+Point it at one of your executions via the `EXECUTION_ARN` env var:
+
 ```bash
-pip install aws-stepfunctions-toolkit
-EXECUTION_ARN=arn:aws:states:<region>:<account>:execution:MyStateMachine:run-1 python run.py
+EXECUTION_ARN=arn:aws:states:<region>:<account>:execution:MyStateMachine:run-1 \
+  uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 ```
 
 This writes `mock_data/{history.json,input.json,state_outputs.json}`. `state_outputs.json` holds
@@ -23,5 +27,6 @@ from the middle of a real run.
 The same thing from the CLI:
 
 ```bash
-sfn-toolkit generate-mock arn:aws:states:<region>:<account>:execution:MyStateMachine:run-1
+uv run --with aws-stepfunctions-toolkit sfn-toolkit generate-mock \
+  arn:aws:states:<region>:<account>:execution:MyStateMachine:run-1
 ```

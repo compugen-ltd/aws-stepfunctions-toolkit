@@ -10,15 +10,18 @@ recurses into the `ItemProcessor` and each branch for you. See
 - [`state_machine.asl.json`](state_machine.asl.json) — a `Map` state then a `Parallel` state.
 - [`run.py`](run.py) — runs it with an empty `mock_mapping` (nothing to mock).
 
+## Requirements
+
+AWS credentials + a region and an IAM role allowed to call `test_state` — see the
+[Setup guide](../../docs/setup.md). No Docker.
+
 ## What to do
 
-1. New to AWS setup? See the [Setup guide](../../docs/setup.md).
-2. Open [`run.py`](run.py) and set `ROLE_ARN`. **That's the only value you must change.**
-3. Run it:
+1. Set `ROLE_ARN` in [`run.py`](run.py) to your `test_state` role.
+2. Run it:
 
 ```bash
-pip install aws-stepfunctions-toolkit
-python run.py
+uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 ```
 
 The `Map` runs its `ItemProcessor` once per item in the list input; the `Parallel` then runs both

@@ -11,15 +11,18 @@ respond. Here it runs locally as a subprocess; the same code runs unchanged in a
 - [`state_machine.asl.json`](state_machine.asl.json) — one `batch:submitJob.sync` step.
 - [`run.py`](run.py) — runs the job via `LocalExecutionStrategy` (no Docker).
 
+## Requirements
+
+AWS credentials + a region and an IAM role allowed to call `test_state` — see the
+[Setup guide](../../docs/setup.md). No Docker (the job runs as a local subprocess).
+
 ## What to do
 
-1. New to AWS setup? See the [Setup guide](../../docs/setup.md).
-2. Open [`run.py`](run.py) and set `ROLE_ARN`. **That's the only value you must change.**
-3. Run it:
+1. Set `ROLE_ARN` in [`run.py`](run.py) to your `test_state` role.
+2. Run it:
 
 ```bash
-pip install aws-stepfunctions-toolkit
-python run.py
+uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 ```
 
 Expected output:

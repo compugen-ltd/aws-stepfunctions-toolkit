@@ -10,15 +10,18 @@ Fast inner loop; switch the same step to `DockerBatchStrategy` later to run the 
 - [`job/main.py`](job/main.py) — the "job": reads its input arg, writes result JSON to `OUTPUT_PATH`.
 - [`run.py`](run.py) — maps the step to `LocalExecutionStrategy(entrypoint=["python", "job/main.py"])` and runs the machine.
 
+## Requirements
+
+AWS credentials + a region and an IAM role allowed to call `test_state` — see the
+[Setup guide](../../docs/setup.md). No Docker (the job runs as a local subprocess).
+
 ## What to do
 
-1. New to AWS setup? See the [Setup guide](../../docs/setup.md) (credentials + the `ROLE_ARN` role).
-2. Open [`run.py`](run.py) and set `ROLE_ARN`. **That's the only value you must change.**
-3. Run it:
+1. Set `ROLE_ARN` in [`run.py`](run.py) to your `test_state` role.
+2. Run it:
 
 ```bash
-pip install aws-stepfunctions-toolkit
-python run.py
+uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 ```
 
 Expected output (the job's payload merged with the input):

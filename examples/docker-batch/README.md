@@ -19,15 +19,19 @@ a **Lambda** step (mocked), so it doubles as the subflow example.
   `example_batch_2`, `example_lambda_1`), each a tiny Dockerfile + script.
 - [`run_tests.py`](run_tests.py) — two pytest tests wiring the runner up both ways.
 
+## Requirements
+
+- **Docker running** — this example builds and runs real containers (`docker info` must work).
+- AWS credentials + a region and an IAM role allowed to call `test_state` — see the
+  [Setup guide](../../docs/setup.md).
+- A `ROLE_ARN` env var (the tests read it from the environment).
+
 ## What to do
 
-1. Read the [Setup guide](../../docs/setup.md) for AWS credentials and the `test_state` role.
-2. This example **needs Docker running**, AWS credentials, and a `ROLE_ARN` env var:
-
 ```bash
-pip install "aws-stepfunctions-toolkit[examples]"
 export ROLE_ARN=arn:aws:iam::<account>:role/<role-with-test-state-perms>
-uv run pytest examples/docker-batch/run_tests.py        # or: make run-example
+uv run --python=3.13 --with "aws-stepfunctions-toolkit[examples]" pytest run_tests.py
+# or, from the repo root:  make run-example
 ```
 
 The tests build the example containers and run them locally, feeding each step's output to the
