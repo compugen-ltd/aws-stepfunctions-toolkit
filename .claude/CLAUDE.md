@@ -80,8 +80,21 @@ aws_stepfunctions_toolkit/
 - `pathlib.Path` for filesystem paths; no `os.path` / string concatenation.
 - Constants in `UPPER_SNAKE_CASE` near the top of the module.
 - Run things with `uv run ...` (e.g. `uv run pytest`, `uv build`).
-- pre-commit (`detect-secrets`, `gitleaks`) guards secrets; real env values live in `data.env`
-  which is gitignored (`*.env` with `!example.env`).
+
+## pre-commit & secret scanning
+
+This repo uses **pre-commit** (`.pre-commit-config.yaml`) — install the hooks once with
+`uv run pre-commit install`; they run on commit (and can be run on demand with
+`uv run pre-commit run --all-files`). Hooks include `detect-secrets`, `gitleaks`,
+`detect-private-key`, and the standard hygiene hooks (large-files, merge-conflict, yaml,
+end-of-file-fixer, trailing-whitespace).
+
+- `detect-secrets` runs against **`.secrets.baseline`**. Real secrets must never be committed;
+  if `detect-secrets` flags a new finding, fix it (don't commit the secret). Only when a finding
+  is a verified false positive, audit and refresh the baseline with
+  `uv run detect-secrets scan --baseline .secrets.baseline` (review the diff before committing).
+- Real env values live in `data.env`, which is gitignored (`*.env` with `!example.env`); commit
+  only `example.env` with placeholders.
 
 ## Container contract (DockerBatchStrategy ↔ your image)
 
@@ -106,3 +119,19 @@ present → `send_task_success`; else write to `OUTPUT_PATH`.
 User-facing docs live in `README.md` (concise) + `docs/*.md` (how-it-works, usage, strategies,
 control-flow, container-handler, cli-and-history). Keep docs in sync with actual signatures —
 the previous README documented an API that didn't exist.
+
+## Third-party notices (legal requirement)
+
+Legal requires a `ThirdPartyNotices.txt` covering our dependencies' licenses/copyrights. It is
+**generated, not hand-edited** — regenerate it whenever dependencies change.
+
+- Generate with `scripts/generate_third_party_notices.sh`. It compiles `pyproject.toml` →
+  `requirements.txt`, then runs the OSS Review Toolkit (`ghcr.io/oss-review-toolkit/ort:latest`)
+  analyze → scan → report to produce the notice file, and copies the result to
+  `ThirdPartyNotices.txt`. Needs Docker.
+- `ossconfig.yaml` is the ORT config consumed by that container (mounted as
+  `~/.ort/config/config.yml`) — it configures the ScanCode scanner (copyright/license extraction)
+  and the local file-based scan-result cache. Edit it to change scan options, not the notice
+  content directly.
+- The script cleans up its scratch (`requirements.txt`, `.ort-temp/`), which are gitignored.
+  Don't hand-edit `ThirdPartyNotices.txt`; re-run the script.
