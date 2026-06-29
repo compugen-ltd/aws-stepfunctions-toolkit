@@ -3,6 +3,24 @@
 The toolkit calls the **real** AWS `test_state` API for the engine logic, so two things must be
 in place before anything runs. A third (Docker) is only needed if you run steps in containers.
 
+> All examples in this project use [`uv`](https://docs.astral.sh/uv/) — e.g.
+> `uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py`, which pulls the toolkit
+> in on the fly (no virtualenv to manage). Install it first (below).
+
+## 0. Install uv
+
+```bash
+# Ubuntu / Linux / macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```powershell
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+(Or `pip install uv` / `pipx install uv` if you prefer.) Verify with `uv --version`.
+
 ## 1. AWS credentials and a region
 
 Any standard AWS SDK setup works — the toolkit uses your ambient boto3 session. Pick one:
