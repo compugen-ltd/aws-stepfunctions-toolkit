@@ -21,4 +21,4 @@ publish:
 	uv publish --index aws
 
 run-example:
-	uv run pytest examples/docker-batch/run_tests.py
+	uv run python examples/docker-batch/run.py
