@@ -11,8 +11,9 @@ HERE = Path(__file__).parent
 definition = json.loads((HERE / "state_machine.asl.json").read_text())
 
 mock_mapping = {
-    # The "Price" Lambda: receives the step's input, returns a (mocked) Lambda result.
-    "Price": CallableStrategy(lambda data: {"Payload": {"total": round(data["amount"] * 1.1, 2)}}),
+    # The "Price" Lambda: returns the function result under "Payload" as a JSON string
+    # (the shape a real lambda:invoke produces; the toolkit $parse's it back).
+    "Price": CallableStrategy(lambda data: {"Payload": json.dumps({"total": round(data["amount"] * 1.1, 2)})}),
 }
 
 runner = WorkflowRunner(role_arn=ROLE_ARN, asl_registry={"main": definition}, mock_mapping=mock_mapping)

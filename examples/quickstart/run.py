@@ -1,11 +1,7 @@
 """Quickstart: run a small Step Functions state machine locally.
 
-Copy this folder, then run:  python run.py
-
-The ONLY thing you must edit is ROLE_ARN below — an IAM role allowed to call the
-Step Functions TestState API. You also need AWS credentials + a region in your
-environment (env vars, ~/.aws, SSO, etc.). No Docker required: this example mocks
-its task steps, so it runs anywhere.
+Set ROLE_ARN, then: uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
+No Docker — the task steps are mocked. AWS setup: ../../docs/setup.md
 """
 import json
 from pathlib import Path
@@ -22,14 +18,15 @@ ROLE_ARN = "arn:aws:iam::<account>:role/<role-with-test-state-perms>"
 HERE = Path(__file__).parent
 definition = json.loads((HERE / "state_machine.asl.json").read_text())
 
+# A mocked lambda:invoke result must put the function's return under "Payload" as a JSON
+# *string* (the toolkit $parse's it back). Return the shape the real integration would.
 mock_mapping = {
     # Your own function — gets the step's input, returns its (mocked) result:
-    "Enrich": CallableStrategy(lambda data: {"Payload": {"enriched": True}}),
+    "Enrich": CallableStrategy(lambda data: {"Payload": json.dumps({"enriched": True})}),
     # A fixed payload:
-    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": {"status": "sent"}})),
+    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": json.dumps({"notified": True})})),
 }
 
-# Build the runner. "main" is the required entry-point key in asl_registry.
 runner = WorkflowRunner(
     role_arn=ROLE_ARN,
     asl_registry={"main": definition},

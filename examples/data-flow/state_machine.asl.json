@@ -1,32 +1,26 @@
 {
-    "Comment": "Shows how data flows from one step to the next (JSONPath).",
+    "Comment": "Shows how data flows from one step to the next (JSONata).",
+    "QueryLanguage": "JSONata",
     "StartAt": "Validate",
     "States": {
         "Validate": {
             "Type": "Pass",
-            "Result": true,
-            "ResultPath": "$.validated",
+            "Output": "{% $merge([$states.input, {'validated': true}]) %}",
             "Next": "Price"
         },
         "Price": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
-            "Parameters": {
+            "Arguments": {
                 "FunctionName": "price-fn",
-                "Payload.$": "$"
+                "Payload": "{% $states.input %}"
             },
-            "ResultSelector": {
-                "total.$": "$.Payload.total"
-            },
-            "ResultPath": "$.pricing",
+            "Output": "{% $merge([$states.input, {'pricing': $states.result.Payload}]) %}",
             "Next": "Summarize"
         },
         "Summarize": {
             "Type": "Pass",
-            "Parameters": {
-                "order_id.$": "$.order_id",
-                "total.$": "$.pricing.total"
-            },
+            "Output": "{% {'order_id': $states.input.order_id, 'total': $states.input.pricing.total} %}",
             "End": true
         }
     }

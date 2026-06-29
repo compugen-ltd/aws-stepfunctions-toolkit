@@ -49,8 +49,9 @@ definition = json.loads(open("state_machine.asl.json").read())
 # For each step you don't want to run for real, say how to produce its result. Keys are the
 # state names from your definition.
 mock_mapping = {
-    "Enrich": CallableStrategy(lambda data: {"Payload": {"enriched": True}}),            # your own function
-    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": {"status": "sent"}})),   # a fixed payload
+    # A mocked lambda:invoke result puts the function's return under "Payload" as a JSON string.
+    "Enrich": CallableStrategy(lambda data: {"Payload": json.dumps({"enriched": True})}),          # your own function
+    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": json.dumps({"status": "sent"})})),  # a fixed payload
 }
 
 runner = WorkflowRunner(

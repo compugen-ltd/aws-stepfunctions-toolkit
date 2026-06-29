@@ -4,7 +4,7 @@ This is the example to read if you're not sure **what a step receives, what it r
 that becomes the next step's input.** The toolkit calls the real `test_state` API, so data flows
 by exact Step Functions rules — and the shape a strategy returns matters.
 
-The machine has three states:
+The machine (JSONata) has three states:
 
 ```
 Validate (Pass) ──▶ Price (Lambda, mocked) ──▶ Summarize (Pass)
@@ -20,10 +20,10 @@ Below is exactly how the data gets there.
 
 ## Run it
 
-1. **Install:** `pip install aws-stepfunctions-toolkit`.
+1. **Install + run:** `uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py`
+   (or `pip install aws-stepfunctions-toolkit` then `python run.py`).
 2. **AWS setup:** credentials + a region and a `test_state` role — see the [Setup guide](../../docs/setup.md).
 3. Open [`run.py`](run.py) and set `ROLE_ARN` (`>>> **EDIT THIS** <<<`).
-4. **Run:** `python run.py`.
 
 ## Step by step: follow the data
 
@@ -36,9 +36,8 @@ input**. Start value (`initial_input`):
 
 ### 1. `Validate` (a `Pass` state — no strategy)
 
-A `Pass` state with `"Result": true` and `"ResultPath": "$.validated"`. `ResultPath` says *where
-to graft this state's result into the incoming data*. So it adds a `validated` key and passes
-everything else through:
+Its `Output` builds a new value from the input: `{% $merge([$states.input, {'validated': true}]) %}`
+— keep everything, add `validated`:
 
 ```json
 { "order_id": 123, "amount": 100, "validated": true }
@@ -48,21 +47,22 @@ everything else through:
 
 ### 2. `Price` (a `Lambda` task — mocked with `CallableStrategy`)
 
-This is where a strategy plugs in. The flow within the state:
+This is where a strategy plugs in:
 
-1. **`Parameters`** builds the Lambda input: `"Payload.$": "$"` → the whole current value.
+1. **`Arguments.Payload`** = `{% $states.input %}` — what the Lambda receives.
 2. **The integration runs.** `test_state` can't invoke Lambda, so your strategy supplies the
    result. `run.py` maps `Price` to:
 
    ```python
-   CallableStrategy(lambda data: {"Payload": {"total": round(data["amount"] * 1.1, 2)}})
+   CallableStrategy(lambda data: {"Payload": json.dumps({"total": round(data["amount"] * 1.1, 2)})})
    ```
 
-   The function receives the step's input (`data`, the value from step 1) and returns the **raw
-   result the Lambda integration would** — `{"Payload": {"total": 110.0}}`. (Returning the shape
-   the real service returns is the key idea — see the table at the bottom.)
-3. **`ResultSelector`** reshapes that raw result: `"total.$": "$.Payload.total"` → `{"total": 110.0}`.
-4. **`ResultPath`** grafts it in at `$.pricing`.
+   The function gets the step's input (`data`, the value from step 1) and returns the **raw result
+   the Lambda integration produces** — `Payload` holding the function's return **as a JSON
+   string** (`test_state` requires that, and the toolkit `$parse`s it back for you).
+3. **`Output`** = `{% $merge([$states.input, {'pricing': $states.result.Payload}]) %}`. Because
+   `Price` is mocked, the toolkit rewrites `$states.result.Payload` → `$parse($states.result.Payload)`
+   automatically, so `pricing` becomes the parsed object.
 
 State output:
 
@@ -72,10 +72,10 @@ State output:
 
 ### 3. `Summarize` (a `Pass` state — no strategy)
 
-`Parameters` builds a brand-new object, pulling two fields out of the accumulated value:
+Its `Output` builds a brand-new object, pulling two fields out of the accumulated value:
 
 ```json
-{ "order_id.$": "$.order_id", "total.$": "$.pricing.total" }
+{% { "order_id": $states.input.order_id, "total": $states.input.pricing.total } %}
 ```
 
 Final output (returned by `runner.start(...)`):
@@ -86,31 +86,26 @@ Final output (returned by `runner.start(...)`):
 
 ## The fields that move data (cheat sheet)
 
-Within one state, data flows: `input → InputPath → Parameters → [integration result] →
-ResultSelector → ResultPath → OutputPath → output`.
+JSONata states use `$states.input` (the state input), `$states.result` (the integration result),
+and `$states.context` (execution metadata), with:
 
 | Field | What it does |
 |-------|--------------|
-| `InputPath` | Select a slice of the state input to work with. |
-| `Parameters` | Build the payload the integration receives (`.$` = a path/expression). |
-| *(integration)* | Produces the **raw result** — here supplied by your strategy. |
-| `ResultSelector` | Reshape the raw result. |
-| `ResultPath` | Where to graft the result into the input (omit fields → replace; `$.x` → add). |
-| `OutputPath` | Final slice to pass on as the state output. |
+| `Arguments` | Build the payload the integration receives. |
+| *(integration)* | Produces the **raw result** in `$states.result` — here supplied by your strategy. |
+| `Output` | Build the state's output (becomes the next state's input). |
 
-(JSONata machines use `Arguments` + `Output` with `$states.input` / `$states.result` instead —
-same idea.)
+(JSONPath machines use `InputPath` / `Parameters` / `ResultSelector` / `ResultPath` / `OutputPath`
+instead — same idea. Note: a mocked `lambda:invoke` needs `Payload` as a string, and only JSONata
+`Output` gets the automatic `$parse` rewrite — so mock Lambda steps with JSONata.)
 
 ## What a strategy must return
 
-A strategy supplies the **raw result** the integration would return, *before* `ResultSelector`/
-`Output` run — so match the real shape:
+A strategy supplies the **raw result** the integration would return, *before* `Output` runs — so
+match the real shape:
 
 | Integration | Return this shape |
 |-------------|-------------------|
-| `lambda:invoke` | `{"Payload": <function return>}` (as `Price` does here). |
+| `lambda:invoke` | `{"Payload": "<function return as a JSON string>"}` (as `Price` does here). |
 | `batch:submitJob.sync` | the job's result object (e.g. what your container writes to `OUTPUT_PATH`). |
 | `states:startExecution.sync:2` | the execution wrapper — handled for you by `StandardFlowStrategy`. |
-
-If `Price` returned a bare `{"total": 110.0}`, the `ResultSelector` (`$.Payload.total`) would find
-nothing — that's the most common data-flow mistake.

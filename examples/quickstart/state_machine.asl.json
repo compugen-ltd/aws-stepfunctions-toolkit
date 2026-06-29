@@ -1,37 +1,31 @@
 {
-    "Comment": "Quickstart pipeline: a Pass, two mocked task steps, and an end.",
+    "Comment": "Quickstart: a Pass plus two mocked Lambda steps.",
+    "QueryLanguage": "JSONata",
     "StartAt": "Prepare",
     "States": {
         "Prepare": {
             "Type": "Pass",
-            "Result": "ready",
-            "ResultPath": "$.status",
+            "Output": "{% $merge([$states.input, {'status': 'ready'}]) %}",
             "Next": "Enrich"
         },
         "Enrich": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
-            "Parameters": {
+            "Arguments": {
                 "FunctionName": "enrich-fn",
-                "Payload.$": "$"
+                "Payload": "{% $states.input %}"
             },
-            "ResultSelector": {
-                "enriched.$": "$.Payload.enriched"
-            },
-            "ResultPath": "$.enrichment",
+            "Output": "{% $merge([$states.input, $states.result.Payload]) %}",
             "Next": "Notify"
         },
         "Notify": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
-            "Parameters": {
+            "Arguments": {
                 "FunctionName": "notify-fn",
-                "Payload.$": "$"
+                "Payload": "{% $states.input %}"
             },
-            "ResultSelector": {
-                "status.$": "$.Payload.status"
-            },
-            "ResultPath": "$.notification",
+            "Output": "{% $merge([$states.input, $states.result.Payload]) %}",
             "End": true
         }
     }
