@@ -19,9 +19,16 @@ git clone https://github.com/compugen-ltd/aws-stepfunctions-toolkit.git
 cd aws-stepfunctions-toolkit/examples/quickstart
 ```
 
-**2. Set your role.** Open `run.py` and replace the `ROLE_ARN` value on the line marked
-`>>> **EDIT THIS** <<<` with an IAM role allowed to call `states:TestState`. Make sure AWS
-credentials + a region are in your environment (env vars, `~/.aws`, SSO). **That's the only edit.**
+**2. Set your role** — an IAM role allowed to call `states:TestState`. Either export it (the
+script reads `ROLE_ARN` from the environment):
+
+```bash
+export ROLE_ARN=arn:aws:iam::<account>:role/<your-test-state-role>
+# Windows PowerShell:  $env:ROLE_ARN = "arn:aws:iam::<account>:role/<your-test-state-role>"
+```
+
+…or edit the default on the `>>> **EDIT THIS** <<<` line in `run.py`. Also make sure AWS
+credentials + a region are in your environment (env vars, `~/.aws`, SSO).
 
 **3. Run it:**
 
