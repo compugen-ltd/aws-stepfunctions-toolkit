@@ -1,0 +1,38 @@
+{
+    "Comment": "Quickstart pipeline: a Pass, two mocked task steps, and an end.",
+    "StartAt": "Prepare",
+    "States": {
+        "Prepare": {
+            "Type": "Pass",
+            "Result": "ready",
+            "ResultPath": "$.status",
+            "Next": "Enrich"
+        },
+        "Enrich": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "enrich-fn",
+                "Payload.$": "$"
+            },
+            "ResultSelector": {
+                "enriched.$": "$.Payload.enriched"
+            },
+            "ResultPath": "$.enrichment",
+            "Next": "Notify"
+        },
+        "Notify": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "notify-fn",
+                "Payload.$": "$"
+            },
+            "ResultSelector": {
+                "status.$": "$.Payload.status"
+            },
+            "ResultPath": "$.notification",
+            "End": true
+        }
+    }
+}

@@ -5,6 +5,7 @@ import logging
 import json
 import uuid
 import shutil
+import subprocess
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -134,6 +135,68 @@ class DockerBatchStrategy(StateExecutionStrategy):
 
 BatchImageStrategy = DockerBatchStrategy
 LocalBatchImageStrategy = DockerBatchStrategy
+
+
+# --- 1b. Implementation: Local subprocess (no Docker) ---
+class LocalExecutionStrategy(StateExecutionStrategy):
+    """Run a step locally as a subprocess — directly in your terminal, no Docker.
+
+    This is the no-Docker counterpart to ``DockerBatchStrategy``: it resolves the step's
+    ``Command`` + ``Environment`` from the ASL (via the test API), prepends ``entrypoint``
+    (the program to run — the local equivalent of a container's ENTRYPOINT), injects
+    ``OUTPUT_PATH`` (a temp file) and ``S3_OUTPUT_PATH``, removes ``TaskToken``, runs the
+    process, and reads the result JSON the process writes to ``OUTPUT_PATH``.
+
+    The same job code (e.g. one using ``BatchJobInterface``) runs unchanged here or in a
+    container, since both honor the ``OUTPUT_PATH`` contract.
+
+        LocalExecutionStrategy(entrypoint=["python", "jobs/process_data/main.py"])
+    """
+
+    def __init__(self, entrypoint: list[str] | None = None, s3_bucket: str | None = None,
+                 execution_id: str | None = None, cwd: str | None = None,
+                 extra_env: dict | None = None, inherit_env: bool = True,
+                 variables: dict | None = None):
+        self.entrypoint = list(entrypoint) if entrypoint else []
+        self.s3_bucket = s3_bucket
+        self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
+        self.cwd = cwd
+        self.extra_env = extra_env or {}
+        self.inherit_env = inherit_env
+        self.variables = variables or dict()
+
+    def _run_local(self, command, extra_envs: dict, state_name: str) -> str:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "output.json"
+            s3_out = (f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
+                      if self.s3_bucket else "")
+            env = dict(os.environ) if self.inherit_env else {}
+            env.update(extra_envs)
+            env.update(self.extra_env)
+            env["OUTPUT_PATH"] = str(output_path)
+            env["S3_OUTPUT_PATH"] = s3_out
+
+            full_cmd = [*self.entrypoint, *command]
+            logger.info(f"Running locally: {full_cmd}")
+            subprocess.run(full_cmd, env=env, cwd=self.cwd, check=True)
+
+            if not output_path.exists():
+                raise RuntimeError(
+                    f"Local process for '{state_name}' did not write OUTPUT_PATH ({output_path}). "
+                    f"The command must write its result JSON to the file named by $OUTPUT_PATH."
+                )
+            return output_path.read_text()
+
+    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
+        overrides = get_container_overrides(
+            orchestrator.client, state_def, orchestrator.role_arn,
+            self.variables, input_data, context
+        )
+        command = overrides["Command"]
+        envs = {ele["Name"]: ele["Value"] for ele in overrides["Environment"]}
+        envs.pop("TaskToken", None)
+        data = self._run_local(command, envs, state_name)
+        return {"mock": {"result": data}, "context": context}
 
 
 # --- 2. Implementation: Callable (user-defined) Strategy ---

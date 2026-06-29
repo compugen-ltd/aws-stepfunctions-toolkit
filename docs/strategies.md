@@ -15,6 +15,7 @@ and you can change a step's means without touching the ASL.
 | *(no mapping)* → `StandardFlowStrategy` | `test_state` evaluates the state; Map/Parallel/subflows recursed | Pass/Choice/Wait/Succeed/Fail and any state whose logic the API can run. |
 | `StaticMockResponseStrategy(result)` | A fixed JSON string | You just need a step to "return X" so the flow proceeds. |
 | `CallableStrategy(handler)` | Your Python function, in-process | Compute a result from the input without a container. |
+| `LocalExecutionStrategy(entrypoint, ...)` | A **local subprocess** (no Docker) | Run the step's code directly in your terminal. |
 | `DockerBatchStrategy(s3_bucket, image_source, ...)` | A **local Docker container** | Actually run a Batch/`.sync` step's image on your machine. |
 | `BatchJobResponseStrategy(job_queue, job_definition, ...)` | A **real AWS Batch** submission | Exercise the step remotely in AWS. |
 | `GetLatestConfigurationStrategy(application, environment, configuration_profile)` | A **real AWS AppConfig** fetch | The step reads live AppConfig. |
@@ -48,6 +49,25 @@ class MyStrategy(StateExecutionStrategy):
         result = my_logic(input_data)          # do anything
         return {"mock": {"result": json.dumps(result)}, "context": context}
 ```
+
+### Run the step locally as a subprocess (no Docker)
+
+```python
+from aws_stepfunctions_toolkit import LocalExecutionStrategy
+
+# Resolves the step's Command/Environment from the ASL, prepends `entrypoint`
+# (the local equivalent of the image's ENTRYPOINT), injects OUTPUT_PATH, runs it,
+# and reads the JSON the process writes to that path.
+LocalExecutionStrategy(
+    entrypoint=["python", "jobs/process_data/main.py"],
+    cwd=".",                       # optional working directory
+    extra_env={"LOG_LEVEL": "DEBUG"},   # optional extra env vars
+)
+```
+
+The same job code runs unchanged here or in a container — both honor the `OUTPUT_PATH` contract
+(see [Container-side handler](container-handler.md)). Use this for a fast, Docker-free inner loop;
+switch the step to `DockerBatchStrategy` when you want the real image.
 
 ### Run the step's container locally
 
