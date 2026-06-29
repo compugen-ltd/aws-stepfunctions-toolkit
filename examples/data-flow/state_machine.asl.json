@@ -5,11 +5,13 @@
     "States": {
         "Validate": {
             "Type": "Pass",
+            "QueryLanguage": "JSONata",
             "Output": "{% $merge([$states.input, {'validated': true}]) %}",
             "Next": "Price"
         },
         "Price": {
             "Type": "Task",
+            "QueryLanguage": "JSONata",
             "Resource": "arn:aws:states:::lambda:invoke",
             "Arguments": {
                 "FunctionName": "price-fn",
@@ -20,6 +22,7 @@
         },
         "Summarize": {
             "Type": "Pass",
+            "QueryLanguage": "JSONata",
             "Output": "{% {'order_id': $states.input.order_id, 'total': $states.input.pricing.total} %}",
             "End": true
         }

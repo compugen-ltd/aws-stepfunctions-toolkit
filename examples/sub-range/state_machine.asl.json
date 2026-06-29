@@ -1,23 +1,24 @@
 {
     "Comment": "A linear three-step pipeline, for demonstrating start/end sub-range runs.",
+    "QueryLanguage": "JSONata",
     "StartAt": "Step1",
     "States": {
         "Step1": {
             "Type": "Pass",
-            "Result": "one",
-            "ResultPath": "$.step1",
+            "QueryLanguage": "JSONata",
+            "Output": "{% $merge([$states.input, {'step1': 'one'}]) %}",
             "Next": "Step2"
         },
         "Step2": {
             "Type": "Pass",
-            "Result": "two",
-            "ResultPath": "$.step2",
+            "QueryLanguage": "JSONata",
+            "Output": "{% $merge([$states.input, {'step2': 'two'}]) %}",
             "Next": "Step3"
         },
         "Step3": {
             "Type": "Pass",
-            "Result": "three",
-            "ResultPath": "$.step3",
+            "QueryLanguage": "JSONata",
+            "Output": "{% $merge([$states.input, {'step3': 'three'}]) %}",
             "End": true
         }
     }

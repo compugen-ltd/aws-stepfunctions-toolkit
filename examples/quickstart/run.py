@@ -13,7 +13,7 @@ from aws_stepfunctions_toolkit import (
 )
 
 # >>> **EDIT THIS** <<<
-ROLE_ARN = "arn:aws:iam::<account>:role/<role-with-test-state-perms>"
+ROLE_ARN = "arn:aws:iam::000000000000:role/sfn-UnigenStateMachine-prod"
 
 HERE = Path(__file__).parent
 definition = json.loads((HERE / "state_machine.asl.json").read_text())

@@ -5,11 +5,13 @@
     "States": {
         "Prepare": {
             "Type": "Pass",
+            "QueryLanguage": "JSONata",
             "Output": "{% $merge([$states.input, {'status': 'ready'}]) %}",
             "Next": "Enrich"
         },
         "Enrich": {
             "Type": "Task",
+            "QueryLanguage": "JSONata",
             "Resource": "arn:aws:states:::lambda:invoke",
             "Arguments": {
                 "FunctionName": "enrich-fn",
@@ -20,6 +22,7 @@
         },
         "Notify": {
             "Type": "Task",
+            "QueryLanguage": "JSONata",
             "Resource": "arn:aws:states:::lambda:invoke",
             "Arguments": {
                 "FunctionName": "notify-fn",

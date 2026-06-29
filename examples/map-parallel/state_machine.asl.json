@@ -1,23 +1,42 @@
 {
     "Comment": "Map (fan-out over items) followed by Parallel (concurrent branches).",
+    "QueryLanguage": "JSONata",
     "StartAt": "FanOut",
     "States": {
         "FanOut": {
             "Type": "Map",
+            "QueryLanguage": "JSONata",
+            "Items": "{% $states.input %}",
             "ItemProcessor": {
                 "ProcessorConfig": { "Mode": "INLINE" },
                 "StartAt": "Mark",
                 "States": {
-                    "Mark": { "Type": "Pass", "Result": { "done": true }, "End": true }
+                    "Mark": {
+                        "Type": "Pass",
+                        "QueryLanguage": "JSONata",
+                        "Output": "{% $merge([$states.input, {'done': true}]) %}",
+                        "End": true
+                    }
                 }
             },
             "Next": "Split"
         },
         "Split": {
             "Type": "Parallel",
+            "QueryLanguage": "JSONata",
             "Branches": [
-                { "StartAt": "A", "States": { "A": { "Type": "Pass", "Result": "branch-a", "End": true } } },
-                { "StartAt": "B", "States": { "B": { "Type": "Pass", "Result": "branch-b", "End": true } } }
+                {
+                    "StartAt": "A",
+                    "States": {
+                        "A": { "Type": "Pass", "QueryLanguage": "JSONata", "Output": "{% {'branch': 'a'} %}", "End": true }
+                    }
+                },
+                {
+                    "StartAt": "B",
+                    "States": {
+                        "B": { "Type": "Pass", "QueryLanguage": "JSONata", "Output": "{% {'branch': 'b'} %}", "End": true }
+                    }
+                }
             ],
             "End": true
         }

@@ -68,6 +68,7 @@ Resources:
           "States": {
             "Enrich": {
               "Type": "Task",
+              "QueryLanguage": "JSONata",
               "Resource": "arn:aws:states:::lambda:invoke",
               "Arguments": {
                 "FunctionName": "${EnricherFunction.Arn}",
@@ -78,6 +79,7 @@ Resources:
             },
             "ProcessLocally": {
               "Type": "Task",
+              "QueryLanguage": "JSONata",
               "Resource": "arn:aws:states:::batch:submitJob.sync",
               "Arguments": {
                 "JobDefinition": "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-definition/placeholder",

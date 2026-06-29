@@ -69,6 +69,11 @@ under the key **`"main"`** (the entry point). If your machine starts nested stat
 `startExecution.sync:2`), register each one too, keyed by the name of the state that starts it —
 see [Control flow](docs/control-flow.md#subflows-nested-state-machines).
 
+> **JSONata throughout.** The examples (and the toolkit's mock-result handling) use the
+> [JSONata](https://docs.aws.amazon.com/step-functions/latest/dg/transforming-data.html) query
+> language. Set `"QueryLanguage": "JSONata"` on **each state** (not just at the top level): the
+> runner tests one state at a time, so a state must declare its own query language.
+
 States **without** an entry in `mock_mapping` are handled automatically (`test_state` for
 ordinary states; built-in recursion for Map / Parallel / nested state machines). To run a step
 in a real local container instead of mocking it, use

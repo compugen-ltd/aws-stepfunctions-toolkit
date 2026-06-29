@@ -124,6 +124,18 @@ This lets users keep their **real** ASL unchanged and still run it locally. If y
 for another integration whose result the ASL reads into, add the matching rewrite. (This is also
 why mocked results — including example job output — should be JSON that gets `$parse`d back.)
 
+Two more `test_state` facts the examples rely on (the project uses **JSONata** throughout):
+
+- **`QueryLanguage` must be set per state, not just top-level.** The runner sends *one state at a
+  time* to `test_state`, and a single state's JSON doesn't carry the machine-level
+  `QueryLanguage` — so a JSONata state validated alone is treated as JSONPath and rejects
+  `Output` (`field 'Output' is only supported for the 'JSONata' QueryLanguage`). Every state in
+  the example ASLs sets `"QueryLanguage": "JSONata"`.
+- **A mocked `lambda:invoke` result's `Payload` must be a JSON string**, not an object
+  (`Field 'Payload' must be a string`). Strategies return `{"Payload": json.dumps(...)}`; the
+  `alter_mock_step` rewrite then `$parse`s it back. JSONPath `ResultSelector` can't `$parse`, so
+  mock Lambda steps must be JSONata.
+
 ## Container contract (DockerBatchStrategy ↔ your image)
 
 The strategy mounts a writable temp dir at `/tmp`, injects `OUTPUT_PATH` (=`/tmp/output.json`)
