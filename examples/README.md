@@ -4,23 +4,18 @@ Each subfolder is a **self-contained** example: its own ASL definition(s), a run
 README with hands-on steps, and any supporting files. Copy a folder, set `ROLE_ARN`, and run.
 
 All examples call the real `test_state` API, so they need AWS credentials + a region and an IAM
-role allowed to call it — see the [Setup guide](../docs/setup.md). Only the Docker example needs
-Docker.
+role allowed to call it — see the [Setup guide](../docs/setup.md). Only `docker-batch` needs
+Docker; only `advanced-deployed` provisions AWS resources.
 
-## Available examples
-
-| Folder | Shows | Needs Docker? |
+| Folder | Shows | Extra prereqs |
 |--------|-------|---------------|
-| [`quickstart/`](quickstart/) | Local end-to-end run; mocking steps with a fixed payload (`StaticMockResponseStrategy`) and your own function (`CallableStrategy`). | No |
-| [`local-subprocess/`](local-subprocess/) | Running a step's code directly on your machine as a subprocess (`LocalExecutionStrategy`). | No |
-| [`docker-batch/`](docker-batch/) | Running steps in real local containers (`DockerBatchStrategy`), both image sources (`DockerfileImage` + `BakeImage`), plus a nested state machine and a Lambda step. | Yes |
+| [`quickstart/`](quickstart/) | Local end-to-end run; mocking steps with a fixed payload (`StaticMockResponseStrategy`) and your own function (`CallableStrategy`). | — |
+| [`local-subprocess/`](local-subprocess/) | Running a step's code directly as a local subprocess (`LocalExecutionStrategy`). | — |
+| [`container-handler/`](container-handler/) | A job written with `BatchJobInterface` (the container-side contract), run locally. | — |
+| [`map-parallel/`](map-parallel/) | `Map` (fan-out) and `Parallel` (branches), handled automatically. | — |
+| [`sub-range/`](sub-range/) | Running only part of a machine with `start` / `end`. | — |
+| [`docker-batch/`](docker-batch/) | Steps in real local containers (`DockerBatchStrategy`); both image sources (`DockerfileImage` + `BakeImage`); a nested state machine; a Lambda step. | Docker |
+| [`mock-generation/`](mock-generation/) | Generating mock data from a real execution + history inspection (`generate_mock_data`, `ExecutionHistory`). | a real execution ARN |
+| [`advanced-deployed/`](advanced-deployed/) | Deploy a state machine + Lambda (CloudFormation), then run locally: invoke the **real** Lambda + run a **local** script step. | deploys AWS resources |
 
-## Planned / not yet here
-
-These features are documented (with snippets) rather than shipped as folders — several can only
-run against real AWS state, so a copy-and-run folder would be misleading:
-
-- **Map & Parallel**, **running a sub-range** → [docs/control-flow.md](../docs/control-flow.md)
-- **Real AWS Batch submission** (`BatchJobResponseStrategy`) → [docs/strategies.md](../docs/strategies.md)
-- **Container-side handler** (`BatchJobInterface`) → [docs/container-handler.md](../docs/container-handler.md)
-- **Mock generation from a real execution** + history → [docs/cli-and-history.md](../docs/cli-and-history.md)
+New here? Start with [`quickstart/`](quickstart/).

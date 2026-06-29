@@ -1,6 +1,7 @@
-"""Local-subprocess example: run a Batch step's code on your machine (no Docker).
+"""Container-side handler example. Set ROLE_ARN, then: python run.py
 
-Set ROLE_ARN, then: python run.py   (AWS setup: ../../docs/setup.md)
+The job in job/main.py uses BatchJobInterface; here it runs locally as a subprocess.
+The same code runs unchanged in a real container (swap to DockerBatchStrategy).
 """
 import json
 import sys
@@ -15,7 +16,7 @@ HERE = Path(__file__).parent
 definition = json.loads((HERE / "state_machine.asl.json").read_text())
 
 mock_mapping = {
-    "ProcessLocally": LocalExecutionStrategy(entrypoint=[sys.executable, str(HERE / "job" / "main.py")]),
+    "RunJob": LocalExecutionStrategy(entrypoint=[sys.executable, str(HERE / "job" / "main.py")]),
 }
 
 runner = WorkflowRunner(role_arn=ROLE_ARN, asl_registry={"main": definition}, mock_mapping=mock_mapping)

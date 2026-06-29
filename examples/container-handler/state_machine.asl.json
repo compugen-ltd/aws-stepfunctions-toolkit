@@ -1,15 +1,15 @@
 {
-    "Comment": "Run one Batch step locally as a subprocess (no Docker).",
-    "StartAt": "ProcessLocally",
+    "Comment": "One Batch step whose container code uses BatchJobInterface.",
+    "StartAt": "RunJob",
     "States": {
-        "ProcessLocally": {
+        "RunJob": {
             "Type": "Task",
             "Resource": "arn:aws:states:::batch:submitJob.sync",
             "QueryLanguage": "JSONata",
             "Arguments": {
-                "JobDefinition": "arn:aws:batch:us-east-1:000000000000:job-definition/local-job",
-                "JobQueue": "arn:aws:batch:us-east-1:000000000000:job-queue/local-queue",
-                "JobName": "local-job",
+                "JobDefinition": "arn:aws:batch:us-east-1:000000000000:job-definition/handler-job",
+                "JobQueue": "arn:aws:batch:us-east-1:000000000000:job-queue/handler-queue",
+                "JobName": "handler-job",
                 "ContainerOverrides": {
                     "Command": [
                         "{% $string($states.input) %}"
@@ -22,7 +22,7 @@
                     ]
                 }
             },
-            "Output": "{% $merge([$parse($states.result), $states.input]) %}",
+            "Output": "{% $parse($states.result) %}",
             "End": true
         }
     }

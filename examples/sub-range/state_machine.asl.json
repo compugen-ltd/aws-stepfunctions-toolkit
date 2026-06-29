@@ -1,0 +1,24 @@
+{
+    "Comment": "A linear three-step pipeline, for demonstrating start/end sub-range runs.",
+    "StartAt": "Step1",
+    "States": {
+        "Step1": {
+            "Type": "Pass",
+            "Result": "one",
+            "ResultPath": "$.step1",
+            "Next": "Step2"
+        },
+        "Step2": {
+            "Type": "Pass",
+            "Result": "two",
+            "ResultPath": "$.step2",
+            "Next": "Step3"
+        },
+        "Step3": {
+            "Type": "Pass",
+            "Result": "three",
+            "ResultPath": "$.step3",
+            "End": true
+        }
+    }
+}

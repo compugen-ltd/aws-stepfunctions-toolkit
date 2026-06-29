@@ -23,10 +23,19 @@ pip install aws-stepfunctions-toolkit
 
 ## Quick start
 
-The snippet below shows the **shape** of your code — it is not runnable on its own (you supply
-your own state machine). To actually run something now, copy
-[`examples/quickstart/`](examples/quickstart/), set `ROLE_ARN`, and run `python run.py` (no
-Docker; the task steps are mocked).
+To run the bundled quickstart example (no Docker — its task steps are mocked):
+
+1. **Install:** `pip install aws-stepfunctions-toolkit`.
+2. **Set up AWS:** credentials + a region, and an IAM role allowed to call `test_state` — see the
+   [Setup guide](docs/setup.md).
+3. **Copy** [`examples/quickstart/`](examples/quickstart/) and open `run.py`; set `ROLE_ARN` to
+   that role (the only value you must change).
+4. **Run** `python run.py` — it runs the bundled state machine locally and prints the output.
+
+### What your code looks like
+
+The snippet below shows the **shape** of a run — it is not runnable on its own (you supply your
+own state machine); the quickstart folder above is the runnable version.
 
 ```python
 import json

@@ -1,0 +1,25 @@
+{
+    "Comment": "Map (fan-out over items) followed by Parallel (concurrent branches).",
+    "StartAt": "FanOut",
+    "States": {
+        "FanOut": {
+            "Type": "Map",
+            "ItemProcessor": {
+                "ProcessorConfig": { "Mode": "INLINE" },
+                "StartAt": "Mark",
+                "States": {
+                    "Mark": { "Type": "Pass", "Result": { "done": true }, "End": true }
+                }
+            },
+            "Next": "Split"
+        },
+        "Split": {
+            "Type": "Parallel",
+            "Branches": [
+                { "StartAt": "A", "States": { "A": { "Type": "Pass", "Result": "branch-a", "End": true } } },
+                { "StartAt": "B", "States": { "B": { "Type": "Pass", "Result": "branch-b", "End": true } } }
+            ],
+            "End": true
+        }
+    }
+}

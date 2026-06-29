@@ -77,8 +77,14 @@ aws_stepfunctions_toolkit/
 ## Conventions
 
 - Python **3.13**; modern typing (`dict`/`list`, `X | None`), full param + return annotations.
-- `pathlib.Path` for filesystem paths; no `os.path` / string concatenation.
-- Constants in `UPPER_SNAKE_CASE` near the top of the module.
+- `pathlib.Path` for filesystem paths; no `os.path` / string concatenation. Prefer accepting/
+  returning `Path` objects at module boundaries.
+- Constants in `UPPER_SNAKE_CASE` near the top of the module; avoid magic numbers/strings —
+  extract them into named constants.
+- `snake_case` for files, functions, and variables (PEP 8).
+- Import order: standard library, then third-party, then local.
+- Use `@staticmethod` for methods that don't use `self`.
+- Default logging level INFO.
 - Run things with `uv run ...` (e.g. `uv run pytest`, `uv build`).
 
 ## pre-commit & secret scanning
@@ -95,6 +101,28 @@ end-of-file-fixer, trailing-whitespace).
   `uv run detect-secrets scan --baseline .secrets.baseline` (review the diff before committing).
 - Real env values live in `data.env`, which is gitignored (`*.env` with `!example.env`); commit
   only `example.env` with placeholders.
+
+## The Test State API requires ASL rewrites when mocking (don't "clean these up")
+
+A real `.sync` / Lambda integration returns a structured object, but when we mock a step the
+result is injected as a **JSON string**. So any `Output`/output expression that reads *into* that
+result must `$parse(...)` it first, or it breaks under `test_state`. The runner rewrites these
+automatically — both sites must stay:
+
+1. `WorkflowRunner._format_definitions` + `RESOURCE_OUTPUT_PATTERNS`
+   (`workflow_runner.py`): for `states:startExecution.sync:2`, rewrites
+   `$states.result.Output` → `$parse($states.result.Output)`.
+2. `WorkflowRunner.alter_mock_step` (`workflow_runner.py`): for `lambda:invoke` states that are
+   in `mock_mapping` and have an `Output`, rewrites `$states.result.Payload` →
+   `$parse($states.result.Payload)`. Gated on `state_name in mock_mapping` because `test_state`
+   never actually invokes the Lambda — a lambda step's result is always *supplied* by its
+   strategy (as a string), whether that strategy returns a static payload or the result of a real
+   `boto3` `lambda.invoke`. So the rewrite applies to the mocked path either way; an unmapped
+   lambda step is left untouched (but then `test_state` has nothing to invoke).
+
+This lets users keep their **real** ASL unchanged and still run it locally. If you add a strategy
+for another integration whose result the ASL reads into, add the matching rewrite. (This is also
+why mocked results — including example job output — should be JSON that gets `$parse`d back.)
 
 ## Container contract (DockerBatchStrategy ↔ your image)
 
@@ -119,6 +147,11 @@ present → `send_task_success`; else write to `OUTPUT_PATH`.
 User-facing docs live in `README.md` (concise) + `docs/*.md` (how-it-works, usage, strategies,
 control-flow, container-handler, cli-and-history). Keep docs in sync with actual signatures —
 the previous README documented an API that didn't exist.
+
+## Reference links
+
+- Amazon States Language (ASL) spec: https://states-language.net/
+- Step Functions `HistoryEvent` API: https://docs.aws.amazon.com/step-functions/latest/apireference/API_HistoryEvent.html
 
 ## Third-party notices (legal requirement)
 

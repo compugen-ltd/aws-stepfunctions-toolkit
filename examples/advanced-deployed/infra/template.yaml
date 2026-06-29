@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Advanced aws-stepfunctions-toolkit example: a real Lambda plus a Step Functions
+  state machine you deploy, then run end-to-end locally. The Lambda step is invoked
+  for real; the Batch step is run locally by the toolkit (no Batch infra needed).
+
+Resources:
+  LambdaExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  EnricherFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt LambdaExecRole.Arn
+      Timeout: 30
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              # Real Lambda invoked by the local run.
+              return {
+                  "order_id": event.get("order_id"),
+                  "enriched": True,
+                  "source": "real-lambda",
+              }
+
+  # The role test_state runs the state machine under (also lets it invoke the Lambda).
+  SfnRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: states.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invoke-and-batch
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt EnricherFunction.Arn
+              - Effect: Allow
+                Action: [batch:SubmitJob, batch:DescribeJobs, batch:TerminateJob]
+                Resource: "*"
+
+  Pipeline:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !GetAtt SfnRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "Enrich via a real Lambda, then a local Batch step.",
+          "QueryLanguage": "JSONata",
+          "StartAt": "Enrich",
+          "States": {
+            "Enrich": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${EnricherFunction.Arn}",
+                "Payload": "{% $states.input %}"
+              },
+              "Output": "{% $merge([$states.input, $states.result.Payload]) %}",
+              "Next": "ProcessLocally"
+            },
+            "ProcessLocally": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::batch:submitJob.sync",
+              "Arguments": {
+                "JobDefinition": "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-definition/placeholder",
+                "JobQueue": "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/placeholder",
+                "JobName": "process",
+                "ContainerOverrides": {
+                  "Command": ["{% $string($states.input) %}"],
+                  "Environment": [
+                    { "Name": "ExecutionName", "Value": "{% $states.context.Execution.Name %}" }
+                  ]
+                }
+              },
+              "Output": "{% $merge([$parse($states.result), $states.input]) %}",
+              "End": true
+            }
+          }
+        }
+
+Outputs:
+  StateMachineArn:
+    Description: Pass as STATE_MACHINE_ARN to run.py
+    Value: !Ref Pipeline
+  FunctionArn:
+    Description: Pass as FUNCTION_ARN to run.py
+    Value: !GetAtt EnricherFunction.Arn
+  SfnRoleArn:
+    Description: Pass as SFN_ROLE_ARN to run.py (the test_state role)
+    Value: !GetAtt SfnRole.Arn
