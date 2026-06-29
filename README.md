@@ -23,33 +23,41 @@ pip install aws-stepfunctions-toolkit
 
 ## Quick start
 
-A complete, **runnable** version of the snippet below lives in
-[`examples/quickstart/`](examples/quickstart/) — copy that folder, set `ROLE_ARN`, and run
-`python run.py`. No Docker needed; the task steps are mocked.
+The snippet below shows the **shape** of your code — it is not runnable on its own (you supply
+your own state machine). To actually run something now, copy
+[`examples/quickstart/`](examples/quickstart/), set `ROLE_ARN`, and run `python run.py` (no
+Docker; the task steps are mocked).
 
 ```python
 import json
 from aws_stepfunctions_toolkit import WorkflowRunner, StaticMockResponseStrategy, CallableStrategy
 
+# Bring your own: your Step Functions state machine, exported as Amazon States Language (ASL)
+# JSON. (In the AWS console: the state machine's "Definition" tab. This is the workflow you
+# want to test — the toolkit does not generate it for you.)
 definition = json.loads(open("state_machine.asl.json").read())
 
+# For each step you don't want to run for real, say how to produce its result. Keys are the
+# state names from your definition.
 mock_mapping = {
-    # Compute a step's result with your own function:
-    "Enrich": CallableStrategy(lambda data: {"Payload": {"enriched": True}}),
-    # ...or return a fixed payload:
-    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": {"status": "sent"}})),
+    "Enrich": CallableStrategy(lambda data: {"Payload": {"enriched": True}}),            # your own function
+    "Notify": StaticMockResponseStrategy(json.dumps({"Payload": {"status": "sent"}})),   # a fixed payload
 }
 
 runner = WorkflowRunner(
-    # The only value you must set. Needs AWS creds + a region in your environment.
-    role_arn="arn:aws:iam::<account>:role/<role-with-test-state-perms>",
-    asl_registry={"main": definition},   # the key "main" is required
+    role_arn="arn:aws:iam::<account>:role/<role-with-test-state-perms>",  # the only value you must set; needs AWS creds + a region in your environment
+    asl_registry={"main": definition},
     mock_mapping=mock_mapping,
 )
 
 final_output = runner.start(initial_input={"order_id": 123})
 print(final_output)
 ```
+
+`asl_registry` maps state-machine names to their ASL definitions: put the workflow you're testing
+under the key **`"main"`** (the entry point). If your machine starts nested state machines (via
+`startExecution.sync:2`), register each one too, keyed by the name of the state that starts it —
+see [Control flow](docs/control-flow.md#subflows-nested-state-machines).
 
 States **without** an entry in `mock_mapping` are handled automatically (`test_state` for
 ordinary states; built-in recursion for Map / Parallel / nested state machines). To run a step
@@ -95,11 +103,16 @@ New to this? The [**Setup guide**](docs/setup.md) covers AWS credentials, creati
 
 ## Examples
 
+Each folder under [`examples/`](examples/) is self-contained (its own ASL, runnable script, and
+README) — see the [examples index](examples/README.md). Start with:
+
 - [`examples/quickstart/`](examples/quickstart/) — copy-and-run starter; set `ROLE_ARN` and
-  `python run.py`. No Docker (task steps are mocked). Start here.
-- [`examples/run_tests.py`](examples/run_tests.py) — runs a small state machine two ways, building
-  the batch container from a plain Dockerfile (`DockerfileImage`) and via `docker buildx bake`
-  (`BakeImage`). `make run-example` runs them (needs Docker, AWS creds, and a `ROLE_ARN` env var).
+  `python run.py`. No Docker (task steps are mocked).
+- [`examples/local-subprocess/`](examples/local-subprocess/) — run a step's code as a local
+  subprocess (`LocalExecutionStrategy`). No Docker.
+- [`examples/docker-batch/`](examples/docker-batch/) — run steps in real local containers
+  (`DockerfileImage` + `BakeImage`) plus a nested machine. `make run-example` runs it (needs
+  Docker, AWS creds, and a `ROLE_ARN` env var).
 
 ## License
 

@@ -1,0 +1,29 @@
+{
+    "Comment": "Run one Batch step locally as a subprocess (no Docker).",
+    "StartAt": "ProcessLocally",
+    "States": {
+        "ProcessLocally": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::batch:submitJob.sync",
+            "QueryLanguage": "JSONata",
+            "Arguments": {
+                "JobDefinition": "arn:aws:batch:us-east-1:000000000000:job-definition/local-job",
+                "JobQueue": "arn:aws:batch:us-east-1:000000000000:job-queue/local-queue",
+                "JobName": "local-job",
+                "ContainerOverrides": {
+                    "Command": [
+                        "{% $string($states.input) %}"
+                    ],
+                    "Environment": [
+                        {
+                            "Name": "ExecutionName",
+                            "Value": "{% $states.context.Execution.Name %}"
+                        }
+                    ]
+                }
+            },
+            "Output": "{% $merge([$states.result.Output, $states.input]) %}",
+            "End": true
+        }
+    }
+}
