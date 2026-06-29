@@ -8,31 +8,26 @@ mocked, so it runs anywhere.
 > First time on AWS? The [**Setup guide**](../../docs/setup.md) walks through configuring AWS
 > credentials and creating the `ROLE_ARN` role from scratch.
 
-**1. Install the toolkit** (ideally in a fresh virtual environment):
+**1. Get this example** — clone the repo and enter this folder (or just `cd` here if you already
+have the repo):
+
+```bash
+git clone https://github.com/compugen-ltd/aws-stepfunctions-toolkit.git
+cd aws-stepfunctions-toolkit/examples/quickstart
+```
+
+**2. Install the toolkit** (ideally in a fresh virtual environment):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # optional; on Windows: .venv\Scripts\activate
 pip install aws-stepfunctions-toolkit
 ```
 
-**2. Make a working directory:**
-
-```bash
-mkdir sfn-quickstart && cd sfn-quickstart
-```
-
-**3. Copy this example's two files into it** (from your clone of the repo):
-
-```bash
-cp /path/to/aws-stepfunctions-toolkit/examples/quickstart/run.py .
-cp /path/to/aws-stepfunctions-toolkit/examples/quickstart/state_machine.asl.json .
-```
-
-**4. Set your role.** Open `run.py` and replace the `ROLE_ARN` value on the line marked
+**3. Set your role.** Open `run.py` and replace the `ROLE_ARN` value on the line marked
 `>>> **EDIT THIS** <<<` with an IAM role allowed to call `states:TestState`. Make sure AWS
 credentials + a region are in your environment (env vars, `~/.aws`, SSO). **That's the only edit.**
 
-**5. Run it:**
+**4. Run it:**
 
 ```bash
 python run.py
