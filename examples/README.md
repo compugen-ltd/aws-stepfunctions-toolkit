@@ -10,6 +10,7 @@ Docker; only `advanced-deployed` provisions AWS resources.
 | Folder | Shows | Extra prereqs |
 |--------|-------|---------------|
 | [`quickstart/`](quickstart/) | Local end-to-end run; mocking steps with a fixed payload (`StaticMockResponseStrategy`) and your own function (`CallableStrategy`). | — |
+| [`data-flow/`](data-flow/) | How data passes from one step to the next (InputPath/Parameters/ResultSelector/ResultPath) and what a strategy must return — with a step-by-step trace. | — |
 | [`local-subprocess/`](local-subprocess/) | Running a step's code directly as a local subprocess (`LocalExecutionStrategy`). | — |
 | [`container-handler/`](container-handler/) | A job written with `BatchJobInterface` (the container-side contract), run locally. | — |
 | [`map-parallel/`](map-parallel/) | `Map` (fan-out) and `Parallel` (branches), handled automatically. | — |

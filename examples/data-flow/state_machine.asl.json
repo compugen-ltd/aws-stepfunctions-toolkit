@@ -1,0 +1,33 @@
+{
+    "Comment": "Shows how data flows from one step to the next (JSONPath).",
+    "StartAt": "Validate",
+    "States": {
+        "Validate": {
+            "Type": "Pass",
+            "Result": true,
+            "ResultPath": "$.validated",
+            "Next": "Price"
+        },
+        "Price": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "price-fn",
+                "Payload.$": "$"
+            },
+            "ResultSelector": {
+                "total.$": "$.Payload.total"
+            },
+            "ResultPath": "$.pricing",
+            "Next": "Summarize"
+        },
+        "Summarize": {
+            "Type": "Pass",
+            "Parameters": {
+                "order_id.$": "$.order_id",
+                "total.$": "$.pricing.total"
+            },
+            "End": true
+        }
+    }
+}
