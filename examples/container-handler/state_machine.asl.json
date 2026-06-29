@@ -22,7 +22,7 @@
                     ]
                 }
             },
-            "Output": "{% $parse($states.result) %}",
+            "Output": "{% $states.result %}",
             "End": true
         }
     }

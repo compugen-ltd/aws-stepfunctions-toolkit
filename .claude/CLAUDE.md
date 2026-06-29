@@ -135,6 +135,11 @@ Two more `test_state` facts the examples rely on (the project uses **JSONata** t
   (`Field 'Payload' must be a string`). Strategies return `{"Payload": json.dumps(...)}`; the
   `alter_mock_step` rewrite then `$parse`s it back. JSONPath `ResultSelector` can't `$parse`, so
   mock Lambda steps must be JSONata.
+- **A mocked `batch:submitJob.sync` result is parsed into an object** — `test_state` parses the
+  result string a strategy supplies, so `$states.result` is *already* an object. Read it directly
+  (`$states.result` / `$states.result.X`); do **not** `$parse` it (`parse` wants a string →
+  `T0410: Argument 1 of function "parse" does not match function signature`). This is the opposite
+  of the Lambda `Payload` case above.
 
 ## Container contract (DockerBatchStrategy ↔ your image)
 

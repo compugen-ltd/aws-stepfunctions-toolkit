@@ -92,7 +92,7 @@ Resources:
                   ]
                 }
               },
-              "Output": "{% $merge([$parse($states.result), $states.input]) %}",
+              "Output": "{% $merge([$states.result, $states.input]) %}",
               "End": true
             }
           }
