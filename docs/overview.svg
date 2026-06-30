@@ -1,0 +1,255 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "https://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" class="sc-fulCBj hKkwVp graph" data-testid="graph" role="img" aria-labelledby="polymath-graph-title" width="880" height="620" viewBox="-40 -64 880 620"><title id="polymath-graph-title">Workflow Studio State Machine Graph</title><g transform="translate(12,12)" class="new-look-graph"><g class="nodes"><g class="node-container" transform="translate(120,22)"><g><circle class="sc-bypJrT dMtiZD shape" r="22"/><text class="sc-klVQfs eXMwlw label"><tspan xml:space="preserve" text-anchor="middle" alignment-baseline="central">Start</tspan></text></g></g><g class="node-container" transform="translate(120,279)"><g class="sc-eBMEME bZyXrL node state Task" data-testid="graph-child_flow" data-state-id="child_flow" data-state-type="Task"><g class="new-look-state-node "><rect x="-120" y="-26" width="240" height="52" rx="8" ry="8"/><g class="handle" transform="translate(-120,-26)" aria-hidden="true"><circle cx="7" cy="20" r="1.5"/><circle cx="12" cy="20" r="1.5"/><circle cx="7" cy="26" r="1.5"/><circle cx="12" cy="26" r="1.5"/><circle cx="7" cy="32" r="1.5"/><circle cx="12" cy="32" r="1.5"/></g><svg class="icon" x="-102" y="-18" width="36" height="36" viewBox="0 0 48 48" overflow="hidden" style="clip-path:inset(0 round 6px)"><title>Step Functions: StartExecution</title><rect fill="var(--color-background-container-header-knegap, #ffffff)" x="0" y="0" width="48" height="48"/><use href="#icon-service-states" aria-hidden="true"><title>Step Functions</title></use><style data-styled="true" data-styled-version="5.3.11">.bZyXrL{cursor:pointer;}/*!sc*/
+data-styled.g42[id="sc-eBMEME"]{content:"bZyXrL,"}/*!sc*/
+.jCgbgS{stroke:#555;background-color:#555;stroke-width:1px;}/*!sc*/
+data-styled.g43[id="sc-dCFHLb"]{content:"jCgbgS,"}/*!sc*/
+.eXMwlw{font-weight:400;font-size:12px;line-height:16px;font-family:Amazon Ember,Arial,Roboto,Arial,sans-serif;text-shadow:none;fill:var(--color-text-button-primary-default-drtg2k,#0f141a);}/*!sc*/
+data-styled.g64[id="sc-klVQfs"]{content:"eXMwlw,"}/*!sc*/
+.dMtiZD{fill:#fff9cc;stroke:var(--color-text-form-secondary-s4scs1,#656871);stroke-width:0.6px;}/*!sc*/
+data-styled.g65[id="sc-bypJrT"]{content:"dMtiZD,"}/*!sc*/
+.jHVuiJ{fill:var(--color-text-form-secondary-s4scs1,#656871);}/*!sc*/
+data-styled.g69[id="sc-hIUJlX"]{content:"jHVuiJ,"}/*!sc*/
+</style><style>
+.new-look-state-node &gt; rect:first-of-type {
+  stroke: var(--color-border-control-default-eyzhft, #8c8c94);
+  stroke-width: 1px;
+  fill: var(--color-background-container-content-ypckbh, #ffffff);
+}
+
+.new-look-state-node .error-icon circle {
+ stroke-linejoin: round;
+}
+
+.new-look-state-node .error-icon circle, .new-look-state-node .error-icon path {
+ stroke: var(--color-border-status-error-kbymrh, #db0000);
+ fill: none;
+ stroke-width: 2px;
+}
+
+.new-look-state-node.has-errors &gt; rect:first-of-type {
+ stroke: var(--color-border-status-error-kbymrh, #db0000);
+ fill: #671c00;
+}
+
+.new-look-state-node.has-errors &gt; .bounding-box &gt; .new-look-state-node-sub &gt; rect {
+  stroke: var(--color-border-status-error-kbymrh, #db0000);
+  fill: var(--color-background-status-error-4hh89j, #fff5f5);
+}
+
+.new-look-state-node .handle circle {
+  fill: var(--color-border-dropdown-item-hover-41eg5t, #8c8c94);
+}
+
+.new-look-state-node {
+  font-weight: 400;
+  font-family: Amazon Ember, Arial, Roboto, Arial, sans-serif;
+  text-shadow: none;
+}
+
+.new-look-state-node .line1 {
+  fill: var(--color-text-form-secondary-s4scs1, #656871);
+  font-size: 12px;
+}
+
+.new-look-state-node .line2 {
+  fill: var(--color-text-form-default-02iaa3, #0f141a);
+}
+
+.selected.node &gt; .new-look-state-node &gt; rect,
+.selected.node &gt; .new-look-state-node &gt; .new-look-state-node &gt; rect,
+.selected.node &gt; .new-look-state-node &gt; .bounding-box &gt; rect,
+.selected.node &gt; .new-look-state-node.has-errors &gt; rect,
+.selected.node &gt; .new-look-state-node.has-errors &gt; .bounding-box &gt; rect,
+.selected.node &gt; .new-look-state-node.has-errors &gt; .new-look-state-node &gt; rect,
+.selected.node &gt; .new-look-state-node &gt; .bounding-box &gt; .new-look-state-node-sub &gt; rect
+ {
+  stroke: var(--color-border-status-info-dvtyme, #006ce0);
+  fill: var(--color-background-status-info-fqjg0f, #f0fbff);
+  stroke-width: 2px;
+}
+
+.new-look-state-node-sub .item-source.not-specified {
+  height: 15px;
+  color: var(--color-text-form-secondary-s4scs1, #656871);
+  font-family: Amazon Ember, Arial, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 16px;
+  font-weight: 400;
+}
+.new-look-state-node-sub .item-source .item-source_name{
+  font-weight: 600;
+}
+.new-look-state-node-sub .item-source.not-specified .item-source_name{
+  font-weight: 400;
+}
+
+.new-look-state-node-sub .item-source.not-specified {
+  font-style: italic;
+}
+
+.new-look-state-node-sub &gt; rect,
+.new-look-state-node &gt; .bounding-box &gt; rect {
+  stroke: var(--color-border-control-default-eyzhft, #8c8c94);
+  fill: var(--color-background-container-content-ypckbh, #ffffff);
+}
+
+.new-look-graph .drag-source {
+  opacity: 0.2;
+}
+
+.new-look-graph .edge, .new-look-graph path.starting-connection {
+  stroke-width: 1px;
+  stroke: var(--color-text-form-secondary-s4scs1, #656871);
+  marker-end: url(#large-arrowhead);
+}
+
+.new-look-graph .edge-label {
+  cursor: pointer;
+}
+
+.new-look-graph .edge-label rect {
+  stroke-width: 1px;
+  stroke: var(--color-border-control-default-eyzhft, #8c8c94);
+  fill: var(--color-background-container-header-knegap, #ffffff);
+}
+
+.new-look-graph .edge-label.selected rect {
+  stroke: var(--color-border-status-info-dvtyme, #006ce0);
+  fill: var(--color-background-status-info-fqjg0f, #f0fbff);
+  stroke-width: 0.6px;
+}
+
+
+
+.new-look-graph .edge-label .label {
+  fill: var(--color-text-form-secondary-s4scs1, #656871);
+  font-family: Amazon Ember, Arial, Roboto, Arial, sans-serif;
+}
+
+/* centering the shape text */
+@-moz-document url-prefix() {
+  .new-look-graph .shape + text,
+  .new-look-graph .edge-label text {
+    transform: translateY(3.5px);
+  }
+}
+
+.new-look-graph .edge path {
+  marker-end: url(#large-arrowhead) !important;
+}
+
+.new-look-graph .edge.selected path{
+  stroke: var(--color-border-status-info-dvtyme, #006ce0);
+  stroke-width: 1.1px;
+}
+
+.new-look-graph .edge.dragging-over path, .new-look-graph  g.dragging-over .starting-connection {
+  stroke: #24439E;
+  stroke-width: 2px;
+}
+
+.new-look-graph .edge.dragging-over path, .new-look-graph .dragging-over path.starting-connection {
+  marker-end: url(#large-highlighted-arrowhead) !important;
+}
+
+.new-look-graph .edge.dragging-over .edge-label text {
+  fill: #24439E;
+}
+
+#large-highlighted-arrowhead {
+  fill: #24439E;
+}
+
+#large-highlighted-arrowhead path {
+  stroke: none;
+}
+
+.new-look-graph .edge.drop-not-supported path, g.drop-not-supported .starting-connection {
+  stroke: var(--color-border-status-error-kbymrh, #db0000);
+}
+
+.new-look-graph .edge.drop-not-supported .edge-label text {
+  fill: var(--color-border-status-error-kbymrh, #db0000);
+}
+
+.new-look-graph .edge.drop-not-supported path {
+  marker-end: url(#large-error-arrowhead) !important;
+}
+
+#large-error-arrowhead {
+  fill: var(--color-border-status-error-kbymrh, #db0000);
+}
+
+.node-container * &gt; .icon  {
+  clip-path: inset(0 round 6px);
+  &gt; rect {
+    fill: var(--color-background-container-header-knegap, #ffffff);
+  }
+}
+
+.node-container * &gt; .icon-divider {
+  stroke: var(--color-border-divider-default-kea2kc, #c6c6cd);
+}
+
+
+.node.Placeholder.dragging-over rect {
+  stroke: var(--color-border-status-info-dvtyme, #006ce0);
+  fill: var(--color-background-status-info-fqjg0f, #f0fbff);
+  stroke-width: 2px;
+}
+
+.node.Placeholder.dragging-over .label {
+  fill: var(--color-text-status-info-tl6m4o, #006ce0);
+}
+
+g.Placeholder rect {
+  stroke-dasharray: 5 4;
+  stroke: var(--color-border-dropdown-item-hover-41eg5t, #8c8c94);
+  fill: #1a2029;
+  stroke-width: 1px;
+}
+
+g.Placeholder .label {
+  font-style: italic;
+  fill: var(--color-text-input-placeholder-hz0ut2, #656871);
+}
+
+.node.Placeholder.drop-not-supported rect {
+  stroke: red;
+}
+
+.node.Placeholder.drop-not-supported .label {
+  fill: red;
+}
+</style><style>.line2 { font-size: 14px }</style></svg><g class="text-lines" transform="translate(-58,-26)"><text transform="translate(0,18)" class="line1"><tspan xml:space="preserve" text-anchor="start">Step Functions: StartExecution</tspan></text><text transform="translate(0,36.5)" class="line2 label"><tspan xml:space="preserve" text-anchor="start">child_flow</tspan></text></g></g></g></g><g class="node-container" transform="translate(120,366)"><g class="sc-eBMEME bZyXrL node state Task" data-testid="graph-example_lambda_1" data-state-id="example_lambda_1" data-state-type="Task"><g class="new-look-state-node "><rect x="-120" y="-26" width="240" height="52" rx="8" ry="8"/><g class="handle" transform="translate(-120,-26)" aria-hidden="true"><circle cx="7" cy="20" r="1.5"/><circle cx="12" cy="20" r="1.5"/><circle cx="7" cy="26" r="1.5"/><circle cx="12" cy="26" r="1.5"/><circle cx="7" cy="32" r="1.5"/><circle cx="12" cy="32" r="1.5"/></g><svg class="icon" x="-102" y="-18" width="36" height="36" viewBox="0 0 48 48" overflow="hidden" style="clip-path:inset(0 round 6px)"><title>Lambda: Invoke</title><rect fill="var(--color-background-container-header-knegap, #ffffff)" x="0" y="0" width="48" height="48"/><use href="#icon-service-lam" aria-hidden="true"><title>Lambda</title></use></svg><g class="text-lines" transform="translate(-58,-26)"><text transform="translate(0,18)" class="line1"><tspan xml:space="preserve" text-anchor="start">Lambda: Invoke</tspan></text><text transform="translate(0,36.5)" class="line2 label"><tspan xml:space="preserve" text-anchor="start">example_lambda_1</tspan></text></g></g></g></g><g class="node-container" transform="translate(120,105)"><g class="sc-eBMEME bZyXrL node state Task" data-testid="graph-example_batch_1" data-state-id="example_batch_1" data-state-type="Task"><g class="new-look-state-node "><rect x="-120" y="-26" width="240" height="52" rx="8" ry="8"/><g class="handle" transform="translate(-120,-26)" aria-hidden="true"><circle cx="7" cy="20" r="1.5"/><circle cx="12" cy="20" r="1.5"/><circle cx="7" cy="26" r="1.5"/><circle cx="12" cy="26" r="1.5"/><circle cx="7" cy="32" r="1.5"/><circle cx="12" cy="32" r="1.5"/></g><svg class="icon" x="-102" y="-18" width="36" height="36" viewBox="0 0 48 48" overflow="hidden" style="clip-path:inset(0 round 6px)"><title>Batch: SubmitJob</title><rect fill="var(--color-background-container-header-knegap, #ffffff)" x="0" y="0" width="48" height="48"/><use href="#icon-service-batch" aria-hidden="true"><title>Batch</title></use></svg><g class="text-lines" transform="translate(-58,-26)"><text transform="translate(0,18)" class="line1"><tspan xml:space="preserve" text-anchor="start">Batch: SubmitJob</tspan></text><text transform="translate(0,36.5)" class="line2 label"><tspan xml:space="preserve" text-anchor="start">example_batch_1</tspan></text></g></g></g></g><g class="node-container" transform="translate(120,192)"><g class="sc-eBMEME bZyXrL node state Task" data-testid="graph-example_batch_2" data-state-id="example_batch_2" data-state-type="Task"><g class="new-look-state-node "><rect x="-120" y="-26" width="240" height="52" rx="8" ry="8"/><g class="handle" transform="translate(-120,-26)" aria-hidden="true"><circle cx="7" cy="20" r="1.5"/><circle cx="12" cy="20" r="1.5"/><circle cx="7" cy="26" r="1.5"/><circle cx="12" cy="26" r="1.5"/><circle cx="7" cy="32" r="1.5"/><circle cx="12" cy="32" r="1.5"/></g><svg class="icon" x="-102" y="-18" width="36" height="36" viewBox="0 0 48 48" overflow="hidden" style="clip-path:inset(0 round 6px)"><title>Batch: SubmitJob</title><rect fill="var(--color-background-container-header-knegap, #ffffff)" x="0" y="0" width="48" height="48"/><use href="#icon-service-batch" aria-hidden="true"><title>Batch</title></use></svg><g class="text-lines" transform="translate(-58,-26)"><text transform="translate(0,18)" class="line1"><tspan xml:space="preserve" text-anchor="start">Batch: SubmitJob</tspan></text><text transform="translate(0,36.5)" class="line2 label"><tspan xml:space="preserve" text-anchor="start">example_batch_2</tspan></text></g></g></g></g><g class="node-container" transform="translate(120,449)"><g><circle class="sc-bypJrT dMtiZD shape" r="22"/><text class="sc-klVQfs eXMwlw label"><tspan xml:space="preserve" text-anchor="middle" alignment-baseline="central">End</tspan></text></g></g></g><g class="edges"><g class="sc-dCFHLb jCgbgS edge"><path id="state-child_flow:state-example_lambda_1:normal" d="M120,305L120,307.9166666666667C120,310.8333333333333,120,316.6666666666667,120,322.5C120,328.3333333333333,120,334.1666666666667,120,337.0833333333333L120,340" marker-end="url(#arrowhead)" fill="none"/></g><g class="sc-dCFHLb jCgbgS edge"><path id="state-example_batch_1:state-example_batch_2:normal" d="M120,131L120,133.91666666666666C120,136.83333333333334,120,142.66666666666666,120,148.5C120,154.33333333333334,120,160.16666666666666,120,163.08333333333334L120,166" marker-end="url(#arrowhead)" fill="none"/></g><g class="sc-dCFHLb jCgbgS edge"><path id="start:state-example_batch_1" d="M120,44L120,46.916666666666664C120,49.833333333333336,120,55.666666666666664,120,61.5C120,67.33333333333333,120,73.16666666666667,120,76.08333333333333L120,79" marker-end="url(#arrowhead)" fill="none"/></g><g class="sc-dCFHLb jCgbgS edge"><path id="state-example_batch_2:state-child_flow:normal" d="M120,218L120,220.91666666666666C120,223.83333333333334,120,229.66666666666666,120,235.5C120,241.33333333333334,120,247.16666666666666,120,250.08333333333334L120,253" marker-end="url(#arrowhead)" fill="none"/></g><g class="sc-dCFHLb jCgbgS edge"><path id="state-example_lambda_1:end:normal" d="M120,392L120,394.9166666666667C120,397.8333333333333,120,403.6666666666667,120,409.5C120,415.3333333333333,120,421.1666666666667,120,424.0833333333333L120,427" marker-end="url(#arrowhead)" fill="none"/></g></g><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 8 3, 0 6"/></marker><marker id="highlighted-arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 6 2, 0 4"/></marker><marker id="error-arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 6 2, 0 4"/></marker><marker id="large-arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 10 4, 0 8"/></marker><marker id="large-highlighted-arrowhead" markerWidth="5.5" markerHeight="4" refX="4.5" refY="2" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 5.5 2, 0 4"/></marker><marker id="large-error-arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" class="sc-hIUJlX jHVuiJ"><polygon points="0 0, 10 4, 0 8"/></marker><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-orange"><stop stop-color="#C8511B" offset="0%"/><stop stop-color="#FF9900" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-turquoise"><stop stop-color="#055F4E" offset="0%"/><stop stop-color="#56C0A7" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-blue"><stop stop-color="#2E27AD" offset="0%"/><stop stop-color="#527FFF" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-pink"><stop stop-color="#B0084D" offset="0%"/><stop stop-color="#FF4F8B" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-red"><stop stop-color="#BD0816" offset="0%"/><stop stop-color="#FF5252" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-green"><stop stop-color="#1B660F" offset="0%"/><stop stop-color="#6CAE3E" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-purple"><stop stop-color="#4D27A8" offset="0%"/><stop stop-color="#A166FF" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-grey"><stop stop-color="#DCDCDC" offset="0%"/><stop stop-color="#F6F5F7" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-light-pink"><stop stop-color="#DD344C" offset="0%"/><stop stop-color="#DD344C" offset="100%"/></linearGradient>,<linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-ag"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-athena"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-emr"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-glue"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-sns"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-states"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-generic"><stop stop-color="#ccc" offset="0%"/><stop stop-color="#ddd" offset="100%"/></linearGradient><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" id="icon-service-batch"><polygon fill="url(#gradient-orange)" fill-rule="nonzero" points="0 0 48 0 48 48 0 48"/><g transform="translate(8.571429, 8.571429)" fill="#FFFFFF"><path d="M27.6806723,23.3485714 L27.6806723,19.0043697 C29.5047648,18.6983597 30.8071576,17.0698645 30.7047354,15.2231199 C30.6023133,13.3763753 29.1278264,11.9018884 27.2810818,11.7994662 C25.4343372,11.6970441 23.805842,12.9994369 23.4998319,14.8235294 L19.1556303,14.8235294 C18.8971801,13.3026518 17.7057515,12.1112233 16.1848739,11.8527731 L16.1848739,8.72470588 C18.3834916,8.40736276 19.9633321,6.44525058 19.8042521,4.22955211 C19.6451721,2.01385363 17.8012338,0.297557709 15.5798319,0.297557709 C13.3584301,0.297557709 11.5144918,2.01385363 11.3554118,4.22955211 C11.1963318,6.44525058 12.7761723,8.40736276 14.9747899,8.72470588 L14.9747899,11.8527731 C13.4539123,12.1112233 12.2624838,13.3026518 12.0040336,14.8235294 L7.96840336,14.8235294 C7.65921366,12.8314023 5.89371883,11.3956768 3.88039532,11.499103 C1.86707181,11.6025292 0.257991345,13.2116096 0.15456515,15.2249331 C0.0511389546,17.2382566 1.48686453,19.0037515 3.4789916,19.3129412 L3.4789916,23.3485714 C1.61814751,23.6631115 0.308674744,25.351003 0.466497598,27.2316327 C0.624320452,29.1122624 2.19679325,30.5583004 4.08403361,30.5583004 C5.97127397,30.5583004 7.54374678,29.1122624 7.70156963,27.2316327 C7.85939248,25.351003 6.54991972,23.6631115 4.68907563,23.3485714 L4.68907563,19.3129412 C6.37715229,19.0456282 7.70109042,17.7216901 7.96840336,16.0336134 L12.0040336,16.0336134 C12.2624838,17.554491 13.4539123,18.7459196 14.9747899,19.0043697 L14.9747899,22.737479 C12.9449227,23.0535289 11.500284,24.8786563 11.6587814,26.9268571 C11.8172788,28.975058 13.5255076,30.5562048 15.5798319,30.5562048 C17.6341562,30.5562048 19.3423851,28.975058 19.5008825,26.9268571 C19.6593799,24.8786563 18.2147411,23.0535289 16.1848739,22.737479 L16.1848739,19.0043697 C17.7057515,18.7459196 18.8971801,17.554491 19.1556303,16.0336134 L23.4998319,16.0336134 C23.7582821,17.554491 24.9497106,18.7459196 26.4705882,19.0043697 L26.4705882,23.3485714 C24.6097441,23.6631115 23.3002714,25.351003 23.4580942,27.2316327 C23.6159171,29.1122624 25.1883899,30.5583004 27.0756303,30.5583004 C28.9628706,30.5583004 30.5353434,29.1122624 30.6931663,27.2316327 C30.8509891,25.351003 29.5415164,23.6631115 27.6806723,23.3485714 L27.6806723,23.3485714 Z M6.50420168,26.9243697 C6.50420168,28.2609917 5.42065553,29.3445378 4.08403361,29.3445378 C2.7474117,29.3445378 1.66386555,28.2609917 1.66386555,26.9243697 C1.66386555,25.5877478 2.7474117,24.5042017 4.08403361,24.5042017 C5.42065553,24.5042017 6.50420168,25.5877478 6.50420168,26.9243697 Z M4.08403361,18.1512605 C2.58033396,18.1512605 1.36134454,16.9322711 1.36134454,15.4285714 C1.36134454,13.9248718 2.58033396,12.7058824 4.08403361,12.7058824 C5.58773327,12.7058824 6.80672269,13.9248718 6.80672269,15.4285714 C6.80339528,16.9308907 5.58635285,18.1479331 4.08403361,18.1512605 L4.08403361,18.1512605 Z M12.5546218,4.53781513 C12.5546218,2.86703773 13.9090545,1.51260504 15.5798319,1.51260504 C17.2506093,1.51260504 18.605042,2.86703773 18.605042,4.53781513 C18.605042,6.20859252 17.2506093,7.56302521 15.5798319,7.56302521 C13.9090545,7.56302521 12.5546218,6.20859252 12.5546218,4.53781513 Z M18.302521,26.6218487 C18.302521,28.1255484 17.0835316,29.3445378 15.5798319,29.3445378 C14.0761323,29.3445378 12.8571429,28.1255484 12.8571429,26.6218487 C12.8571429,25.1181491 14.0761323,23.8991597 15.5798319,23.8991597 C17.0821512,23.9024871 18.2991936,25.1195295 18.302521,26.6218487 Z M15.5798319,17.8487395 C14.24321,17.8487395 13.1596639,16.7651933 13.1596639,15.4285714 C13.1596639,14.0919495 14.24321,13.0084034 15.5798319,13.0084034 C16.9164538,13.0084034 18,14.0919495 18,15.4285714 C18,16.7651933 16.9164538,17.8487395 15.5798319,17.8487395 Z M24.6554622,15.4285714 C24.6554622,14.0919495 25.7390083,13.0084034 27.0756303,13.0084034 C28.4122522,13.0084034 29.4957983,14.0919495 29.4957983,15.4285714 C29.4957983,16.7651933 28.4122522,17.8487395 27.0756303,17.8487395 C25.7390083,17.8487395 24.6554622,16.7651933 24.6554622,15.4285714 Z M27.0756303,29.3445378 C25.7390083,29.3445378 24.6554622,28.2609917 24.6554622,26.9243697 C24.6554622,25.5877478 25.7390083,24.5042017 27.0756303,24.5042017 C28.4122522,24.5042017 29.4957983,25.5877478 29.4957983,26.9243697 C29.4957983,28.2609917 28.4122522,29.3445378 27.0756303,29.3445378 Z"/><circle cx="4.08403361" cy="15.4285714" r="1.21008403"/><circle cx="15.5798319" cy="26.6218487" r="1.21008403"/></g></g><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" id="icon-service-lam"><polygon fill="url(#gradient-orange)" fill-rule="nonzero" points="0 0 48 0 48 48 0 48"/><g transform="translate(11, 10)" fill="#FFFFFF"><path d="M26.5889213,27.8937088 L19.6925948,27.8937088 C19.4772752,27.8931074 19.2813916,27.7706914 19.1888047,27.578869 L9.43766764,7.45673404 L5.31218659,7.45673404 C5.00303594,7.45673404 4.75241983,7.20943823 4.75241983,6.90438337 L4.75241983,0.828526005 C4.75241983,0.523471153 5.00303594,0.276175335 5.31218659,0.276175335 L13.9325948,0.276175335 C14.1479143,0.276776788 14.3437979,0.399192787 14.4363848,0.591015217 L24.1427405,20.7131501 L26.5889213,20.7131501 C26.8980719,20.7131501 27.148688,20.9604459 27.148688,21.2655008 L27.148688,27.3413582 C27.148688,27.646413 26.8980719,27.8937088 26.5889213,27.8937088 Z M20.0452478,26.7890075 L26.0291545,26.7890075 L26.0291545,21.8178515 L23.7900875,21.8178515 C23.5747679,21.81725 23.3788843,21.694834 23.2862974,21.5030116 L13.5799417,1.38087667 L5.87755102,1.38087667 L5.87755102,6.3520327 L9.79591837,6.3520327 C10.0112379,6.35263416 10.2071215,6.47505016 10.2997085,6.66687259 L20.0452478,26.7890075 Z"/><path d="M8.10542274,27.8937099 L0.82845481,27.8937099 C0.635054571,27.8940907 0.455155006,27.7959347 0.352653061,27.634104 C0.243858391,27.4681848 0.233185428,27.2575536 0.324664723,27.0817533 L7.93749271,11.3894708 C8.03007964,11.1976484 8.22596323,11.0752324 8.4412828,11.0746298 L8.4412828,11.0746298 C8.65533487,11.0742082 8.85089022,11.1942751 8.94507289,11.3839473 L12.5891545,18.7799228 C12.6634688,18.931712 12.6634688,19.1086786 12.5891545,19.2604679 L8.6148105,27.5457279 C8.53147526,27.7523199 8.33072312,27.8894609 8.10542274,27.8937099 L8.10542274,27.8937099 Z M1.72408163,26.7890075 L7.75276968,26.7890075 L11.4640233,19.0560981 L8.44688047,12.8973881 L1.72408163,26.7890075 Z"/></g></g><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" id="icon-service-states"><polygon fill="url(#gradient-states)" fill-rule="nonzero" points="0 0 48 0 48 48 0 48"/><g transform="translate(7.714286, 7.714286)" fill="#FFFFFF"><path d="M26.9059233,12.3928716 L26.9059233,8.47912299 C26.9059233,8.11887237 26.6121138,7.82683155 26.2496813,7.82683155 L17.0622929,7.82683155 L17.0622929,6.45701954 C18.7127174,6.12215613 19.8399485,4.59949006 19.6706454,2.9336515 C19.5013424,1.26781294 18.0905083,0 16.4060508,0 C14.7215933,0 13.3107593,1.26781294 13.1414562,2.9336515 C12.9721531,4.59949006 14.0993842,6.12215613 15.7498088,6.45701954 L15.7498088,7.82683155 L6.56242033,7.82683155 C6.19998786,7.82683155 5.9061783,8.11887237 5.9061783,8.47912299 L5.9061783,11.0882887 L0.656242033,11.0882887 C0.293809566,11.0882887 0,11.3803295 0,11.7405802 L0,15.0020373 C0,15.362288 0.293809566,15.6543288 0.656242033,15.6543288 L5.9061783,15.6543288 L5.9061783,16.9589116 L0.656242033,16.9589116 C0.293809566,16.9589116 0,17.2509525 0,17.6112031 L0,20.8726603 C0,21.2329109 0.293809566,21.5249517 0.656242033,21.5249517 L5.9061783,21.5249517 L5.9061783,24.1341174 C5.9061783,24.494368 6.19998786,24.7864089 6.56242033,24.7864089 L15.7498088,24.7864089 L15.7498088,26.1562209 C14.0993842,26.4910843 12.9721531,28.0137504 13.1414562,29.6795889 C13.3107593,31.3454275 14.7215933,32.6132404 16.4060508,32.6132404 C18.0905083,32.6132404 19.5013424,31.3454275 19.6706454,29.6795889 C19.8399485,28.0137504 18.7127174,26.4910843 17.0622929,26.1562209 L17.0622929,24.7864089 L26.2496813,24.7864089 C26.6121138,24.7864089 26.9059233,24.494368 26.9059233,24.1341174 L26.9059233,20.8726603 L25.5934393,20.8726603 L25.5934393,23.481826 L7.21866236,23.481826 L7.21866236,21.5249517 L12.4685986,21.5249517 C12.8310311,21.5249517 13.1248407,21.2329109 13.1248407,20.8726603 L13.1248407,17.6112031 C13.1248407,17.2509525 12.8310311,16.9589116 12.4685986,16.9589116 L7.21866236,16.9589116 L7.21866236,15.6543288 L12.4685986,15.6543288 C12.8310311,15.6543288 13.1248407,15.362288 13.1248407,15.0020373 L13.1248407,11.7405802 C13.1248407,11.3803295 12.8310311,11.0882887 12.4685986,11.0882887 L7.21866236,11.0882887 L7.21866236,9.13141442 L25.5934393,9.13141442 L25.5934393,12.3928716 L26.9059233,12.3928716 Z M18.3747769,29.3524489 C18.3747769,30.4332008 17.4933482,31.3093232 16.4060508,31.3093232 C15.3187534,31.3093232 14.4373247,30.4332008 14.4373247,29.3524489 C14.4373247,28.2716971 15.3187534,27.3955746 16.4060508,27.3955746 C17.4933482,27.3955746 18.3747769,28.2716971 18.3747769,29.3524489 L18.3747769,29.3524489 Z M11.8123566,18.2634945 L11.8123566,20.2203688 L1.31248407,20.2203688 L1.31248407,18.2634945 L11.8123566,18.2634945 Z M11.8123566,12.3928716 L11.8123566,14.3497459 L1.31248407,14.3497459 L1.31248407,12.3928716 L11.8123566,12.3928716 Z M14.4373247,3.2607915 C14.4373247,2.18003967 15.3187534,1.3039172 16.4060508,1.3039172 C17.4933482,1.3039172 18.3747769,2.18003967 18.3747769,3.2607915 C18.3747769,4.34154334 17.4933482,5.21766581 16.4060508,5.21766581 C15.3187534,5.21766581 14.4373247,4.34154334 14.4373247,3.2607915 Z"/><path d="M32.7614824,13.0452962 L19.4197022,13.0452962 C19.0512792,13.0452962 18.7526132,13.3292132 18.7526132,13.6794425 L18.7526132,18.1184669 C18.7526132,18.4686963 19.0512792,18.7526132 19.4197022,18.7526132 L32.7614824,18.7526132 C33.1299055,18.7526132 33.4285714,18.4686963 33.4285714,18.1184669 L33.4285714,13.6794425 C33.4285714,13.3292132 33.1299055,13.0452962 32.7614824,13.0452962 Z M32.0943934,17.4843206 L20.0867913,17.4843206 L20.0867913,14.3135889 L32.0943934,14.3135889 L32.0943934,17.4843206 Z"/></g></g></defs></g><g class="toolkit-annotations" font-family="Amazon Ember, Arial, Roboto, sans-serif"><defs><marker id="ann-arrow-blue" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#1E88E5"/></marker><marker id="ann-arrow-purple" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#8E24AA"/></marker><marker id="ann-arrow-orange" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#FB8C00"/></marker></defs>
+<text x="430" y="-36" text-anchor="middle" font-size="17" font-weight="700" fill="#0f141a">One real Step Functions workflow &#8212; run it end-to-end, locally</text>
+<text x="430" y="-14" text-anchor="middle" font-size="12.5" fill="#555555">The toolkit walks the states and decides, per step, how to execute it.</text>
+<path d="M2,34 L-20,34 L-20,461 L2,461" fill="none" stroke="#2E7D32" stroke-width="1.5"/>
+<text transform="translate(-32,247) rotate(-90)" text-anchor="middle" font-size="11.5" fill="#2E7D32">walk order: each state&#39;s output &#8594; next state&#39;s input</text>
+<rect x="6" y="85" width="252" height="64" rx="12" fill="none" stroke="#1E88E5" stroke-width="2" stroke-dasharray="6 4"/>
+<rect x="6" y="172" width="252" height="64" rx="12" fill="none" stroke="#1E88E5" stroke-width="2" stroke-dasharray="6 4"/>
+<rect x="6" y="259" width="252" height="64" rx="12" fill="none" stroke="#8E24AA" stroke-width="2" stroke-dasharray="6 4"/>
+<rect x="6" y="346" width="252" height="64" rx="12" fill="none" stroke="#FB8C00" stroke-width="2" stroke-dasharray="6 4"/>
+<path d="M258,117 L266,117" stroke="#1E88E5" stroke-width="1.5" fill="none"/>
+<path d="M258,204 L266,204" stroke="#1E88E5" stroke-width="1.5" fill="none"/>
+<path d="M266,110 L266,211" stroke="#1E88E5" stroke-width="1.5" fill="none"/>
+<path d="M266,160 L326,160" stroke="#1E88E5" stroke-width="1.5" fill="none" marker-end="url(#ann-arrow-blue)"/>
+<path d="M258,291 L326,291" stroke="#8E24AA" stroke-width="1.5" fill="none" marker-end="url(#ann-arrow-purple)"/>
+<path d="M258,378 L326,378" stroke="#FB8C00" stroke-width="1.5" fill="none" marker-end="url(#ann-arrow-orange)"/>
+<rect x="330" y="120" width="490" height="82" rx="8" fill="#E3F2FD" stroke="#1E88E5" stroke-width="1"/>
+<text x="344" y="141" font-size="12.5" font-weight="700" fill="#0f141a">Batch submitJob.sync &#215;2</text>
+<text font-size="12" fill="#37474F"><tspan x="344" y="159">test_state can&#39;t execute .sync steps. The toolkit runs each via a</tspan><tspan x="344" y="176">strategy &#8212; e.g. DockerBatchStrategy builds &amp; runs the job&#39;s container</tspan><tspan x="344" y="193">locally. No deploy, no AWS Batch needed.</tspan></text>
+<rect x="330" y="262" width="490" height="58" rx="8" fill="#F3E5F5" stroke="#8E24AA" stroke-width="1"/>
+<text x="344" y="281" font-size="12.5" font-weight="700" fill="#0f141a">startExecution.sync:2 &#8212; nested state machine</text>
+<text font-size="12" fill="#37474F"><tspan x="344" y="299">The runner recurses into the child&#39;s ASL and walks it the same way</tspan><tspan x="344" y="316">(register the child under asl_registry).</tspan></text>
+<rect x="330" y="350" width="490" height="58" rx="8" fill="#FFF3E0" stroke="#FB8C00" stroke-width="1"/>
+<text x="344" y="369" font-size="12.5" font-weight="700" fill="#0f141a">lambda:invoke &#8212; ordinary engine step</text>
+<text font-size="12" fill="#37474F"><tspan x="344" y="387">test_state applies the input/output processing; you supply its result</tspan><tspan x="344" y="404">with a CallableStrategy or a static mock.</tspan></text>
+<rect x="330" y="430" width="490" height="116" rx="8" fill="#FAFAFA" stroke="#BDBDBD" stroke-width="1"/>
+<text x="344" y="450" font-size="12.5" font-weight="700" fill="#0f141a">How each state is handled</text>
+<rect x="344" y="460" width="14" height="14" rx="3" fill="#FB8C00"/><text x="366" y="471" font-size="11.5" fill="#37474F">test_state runs the engine I/O (InputPath / Arguments / ResultSelector / Output)</text>
+<rect x="344" y="482" width="14" height="14" rx="3" fill="#1E88E5"/><text x="366" y="493" font-size="11.5" fill="#37474F">a strategy executes the step locally: Docker, subprocess, your function, mock, real AWS</text>
+<rect x="344" y="504" width="14" height="14" rx="3" fill="#8E24AA"/><text x="366" y="515" font-size="11.5" fill="#37474F">recursion into subflows / Map / Parallel</text>
+<rect x="344" y="526" width="14" height="14" rx="3" fill="#2E7D32"/><text x="366" y="537" font-size="11.5" fill="#37474F">each state&#39;s output feeds the next state&#39;s input</text>
+</g>
+</svg>
