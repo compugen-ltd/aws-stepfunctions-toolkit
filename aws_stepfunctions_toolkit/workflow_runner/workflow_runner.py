@@ -53,8 +53,9 @@ class WorkflowRunner:
     def has_token(self, state_def: dict) -> bool:
         return jmespath.search("Arguments.ContainerOverrides.Environment[?Name=='TaskToken']", state_def) is not None
 
-    def _get_context_for_state(self, state_def: dict, state_input) -> str:
+    def _get_context_for_state(self, state_def: dict, state_input, state_name: str) -> str:
         ctx = ExecutionContext().with_input(state_input)
+        ctx.State.Name = state_name  # so ASL expressions like $states.context.State.Name resolve
         if self.has_token(state_def):
             ctx = ctx.with_task_token()
         return ctx.model_dump_json(exclude_none=True)
@@ -105,21 +106,21 @@ class WorkflowRunner:
                 strategy = mock_mapping[hierarchical_key]
                 raw_result = strategy.execute(
                     current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
             elif current_state in mock_mapping:
                 strategy = mock_mapping[current_state]
                 raw_result = strategy.execute(
                     current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
             else:
                 strategy = self.default_strategy
                 raw_result = strategy.execute(
                     current_state, state_def, data, self, mock_mapping=mock_mapping,
-                    context=self._get_context_for_state(state_def, initial_input),
+                    context=self._get_context_for_state(state_def, initial_input, current_state),
                     parent_path=parent_path
                 )
 

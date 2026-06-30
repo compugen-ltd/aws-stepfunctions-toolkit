@@ -140,6 +140,11 @@ Two more `test_state` facts the examples rely on (the project uses **JSONata** t
   (`$states.result` / `$states.result.X`); do **not** `$parse` it (`parse` wants a string →
   `T0410: Argument 1 of function "parse" does not match function signature`). This is the opposite
   of the Lambda `Payload` case above.
+- **The synthesized context sets `State.Name` to the current state** (and `Execution.Input` to the
+  run input). `_get_context_for_state` must pass the state name so ASL expressions like
+  `$lookup($states.context.Execution.Input.mem, $states.context.State.Name)` (per-state sizing)
+  resolve — otherwise the lookup misses, the `Arguments` fail to evaluate, and
+  `get_container_overrides` sees no `afterArguments`.
 
 ## Container contract (DockerBatchStrategy ↔ your image)
 
