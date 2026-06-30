@@ -1,0 +1,14 @@
+# gitleaks configuration for this repo.
+#
+# Extends the default gitleaks ruleset and allowlists the package's own
+# author/contact identities so keeping them in shipped files (e.g. the
+# pyproject.toml `authors` field) is explicitly permitted and never flagged.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Permit the package's own author/contact identities"
+regexes = [
+    '''roya@cgen\.com''',
+    '''noreply@cgen\.com''',
+]

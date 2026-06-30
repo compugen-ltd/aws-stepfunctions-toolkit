@@ -47,8 +47,10 @@ aws_stepfunctions_toolkit/
    `aws_stepfunctions_toolkit.workflow_runner._common.resolve_region` (explicit arg → `AWS_REGION`
    → boto3 session); never hardcode `us-east-1` for a client. The only `us-east-1` literals
    allowed are the inert placeholder ARNs in `models.py:StartExecutionResult` (account
-   `000000000000`) and example ASL files (fake accounts). Sweep before committing:
-   `rg -n "000000000000|/Rnd/|royassis|us-east-1" aws_stepfunctions_toolkit`.
+   `000000000000`) and example ASL files (fake accounts). Sweep before committing for the
+   real account ID, internal handles/paths, and region literals. The concrete values and the
+   exact `rg` sweep command are kept out of the public repo in the gitignored
+   `CLAUDE.local.md` (imported at the bottom of this file).
 
 3. **Don't hardcode a bake file.** Docker images come from a pluggable `ImageSource`.
    `DockerfileImage` (plain `docker build`) is the easy default; `BakeImage` is one option, not a
@@ -206,3 +208,11 @@ Legal requires a `ThirdPartyNotices.txt` covering our dependencies' licenses/cop
   content directly.
 - The script cleans up its scratch (`requirements.txt`, `.ort-temp/`), which are gitignored.
   Don't hand-edit `ThirdPartyNotices.txt`; re-run the script.
+
+## Local-only context (gitignored)
+
+Concrete org-specific values (real account ID, handles, sweep command) live in
+`CLAUDE.local.md`, which is gitignored so it never ships in the public repo. The
+import below loads it when present (absent on public clones — that's expected).
+
+@CLAUDE.local.md

@@ -3,6 +3,7 @@ name = "aws-stepfunctions-toolkit"
 version = "0.1.2"
 authors = [
     { name = "Roy Assis", email = "roya@cgen.com" },
+    { name = "Compugen", email = "noreply@cgen.com" },
 ]
 description = "POC for using AWS Step Functions test API for testing state machines locally using mock data"
 readme = "README.md"
@@ -44,6 +45,7 @@ dev = [
     "notebook>=7.5.0",
     "pytest>=8.0.0",
     "pytest-xdist>=3.5.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
@@ -60,19 +62,10 @@ include = ["aws_stepfunctions_toolkit*"]
 aws_stepfunctions_toolkit = ["py.typed"]
 
 
-[[tool.uv.index]]
-name = "pypi"
-url = "https://pypi.org/simple"
-priority = "primary"
-
-[[tool.uv.index]]
-name = "aws"
-url = "https://aws@cgen-000000000000.d.codeartifact.us-east-1.amazonaws.com/pypi/cgen-pypi/simple/"
-publish-url = "https://aws@cgen-000000000000.d.codeartifact.us-east-1.amazonaws.com/pypi/cgen-pypi/"
-install = false
-
-[tool.uv]
-keyring-provider = "subprocess"
+# uv configuration (indexes, keyring) is kept in a gitignored `uv.toml` so the
+# private package index / account ID never lands in the public repo. uv reads a
+# project-root `uv.toml` automatically, and it takes precedence over any
+# `[tool.uv]` here. See `example.uv.toml` for the template; copy it to `uv.toml`.
 
 
 [tool.pytest.ini_options]

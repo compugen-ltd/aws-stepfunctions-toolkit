@@ -1,0 +1,18 @@
+# Template for a local-only `uv.toml`. Copy this to `uv.toml` (gitignored) and
+# fill in your private index if you publish somewhere other than PyPI. uv reads a
+# project-root `uv.toml` automatically and uses it instead of any [tool.uv] table
+# in pyproject.toml. Public users who only install from PyPI do NOT need this file.
+
+keyring-provider = "subprocess"
+
+[[index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+priority = "primary"
+
+# Optional private index for `uv publish` (e.g. a CodeArtifact repo). Omit to use PyPI.
+# [[index]]
+# name = "private"
+# url = "https://<user>@<your-private-index>/simple/"
+# publish-url = "https://<user>@<your-private-index>/"
+# install = false

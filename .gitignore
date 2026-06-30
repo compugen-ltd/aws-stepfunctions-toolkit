@@ -31,3 +31,8 @@ requirements.txt
 .ruff_cache
 
 .pytest_cache
+
+# Local-only config holding org-specific values (account ID, private index).
+# Templates (example.uv.toml) stay tracked.
+uv.toml
+CLAUDE.local.md

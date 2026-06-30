@@ -151,6 +151,7 @@ dev = [
     { name = "poethepoet" },
     { name = "pytest" },
     { name = "pytest-xdist" },
+    { name = "python-dotenv" },
     { name = "ruff" },
 ]
 
@@ -181,6 +182,7 @@ dev = [
     { name = "poethepoet", specifier = ">=0.37.0" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-xdist", specifier = ">=3.5.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "ruff", specifier = ">=0.1.8" },
 ]
 
