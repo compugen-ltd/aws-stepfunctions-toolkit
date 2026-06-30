@@ -1,0 +1,76 @@
+name: Release
+
+# Triggered by publishing a GitHub Release. Create a Release whose tag is the
+# version you want (e.g. `v0.2.0`); setuptools-scm derives the package version
+# from that tag, so the tag is the single source of truth. Publishing the
+# Release fires this workflow: build -> publish to PyPI -> attach build files.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history + tags are required for setuptools-scm to derive the
+          # version from the release tag.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Show derived version
+        run: ls -1 dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi-publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the environment registered on PyPI's Trusted Publisher for this
+    # project (along with this workflow filename, release.yml).
+    environment:
+      name: pypi
+      url: https://pypi.org/p/aws-stepfunctions-toolkit
+    permissions:
+      # OIDC token for PyPI Trusted Publishing — no API token/secret needed.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  attach-artifacts:
+    name: Attach build files to the Release
+    needs: pypi-publish
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload assets onto the Release (does not touch the notes).
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload sdist + wheel to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --repo "${{ github.repository }}" --clobber

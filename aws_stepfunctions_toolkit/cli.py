@@ -42,7 +42,7 @@ def generate_mock(
     )
 
     typer.echo(f"Mock data generated in: {result['output_dir']}")
-    typer.echo(f"Files created: history.json, input.json, state_outputs.json")
+    typer.echo("Files created: history.json, input.json, state_outputs.json")
 
 
 def main():

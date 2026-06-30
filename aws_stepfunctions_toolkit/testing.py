@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Final
+from typing import Any
 
 import boto3
 from typing_extensions import TypedDict

@@ -67,9 +67,7 @@ def _run(script: str, extra_env: dict | None = None) -> subprocess.CompletedProc
 
 def test_all_example_scripts_are_covered():
     """Offline guard: every examples/*/run*.py must be in COVERED (so it gets a test)."""
-    found = {
-        p.relative_to(EXAMPLES).as_posix() for p in EXAMPLES.glob("*/run*.py")
-    }
+    found = {p.relative_to(EXAMPLES).as_posix() for p in EXAMPLES.glob("*/run*.py")}
     missing = found - COVERED
     assert not missing, f"example scripts with no test: {sorted(missing)}"
     stale = COVERED - found
