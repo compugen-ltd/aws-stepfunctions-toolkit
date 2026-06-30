@@ -510,8 +510,13 @@ class StandardFlowStrategy(StateExecutionStrategy):
                 parent_path=new_parent_path,
             )
             result["Output"] = json.dumps(resp)
+            # Return the full startExecution wrapper (with Output as a JSON string) so the
+            # parent state's `$states.result.Output` reads the child's output.
             return {
-                "mock": {"result": result["Output"], "fieldValidationMode": "PRESENT"},
+                "mock": {
+                    "result": json.dumps(result),
+                    "fieldValidationMode": "PRESENT",
+                },
                 "context": context,
             }
 

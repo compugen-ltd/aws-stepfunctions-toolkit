@@ -145,6 +145,12 @@ Two more `test_state` facts the examples rely on (the project uses **JSONata** t
   `$lookup($states.context.Execution.Input.mem, $states.context.State.Name)` (per-state sizing)
   resolve — otherwise the lookup misses, the `Arguments` fail to evaluate, and
   `get_container_overrides` sees no `afterArguments`.
+- **A mocked `startExecution.sync:2` result is a wrapper whose `Output` is a JSON string**
+  (`StartExecutionResult`); `test_state` rejects a null `Output` (`Field 'Output' must be a
+  string`), so the model defaults `Output="{}"`. `StandardFlowStrategy` recurses into the child,
+  sets `result["Output"] = json.dumps(child_output)`, and returns the **full wrapper** so the
+  parent's `$states.result.Output` resolves. (This recursion path is separate from mocking the
+  whole sub-run with a `StaticMockResponseStrategy`.)
 
 ## Container contract (DockerBatchStrategy ↔ your image)
 

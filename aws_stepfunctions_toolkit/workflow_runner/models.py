@@ -67,7 +67,9 @@ class StartExecutionResult(BaseModel):
     )
     Status: str = "SUCCEEDED"
     StopDate: str = "1769015943200"
-    Output: str | None = None
+    # The startExecution.sync:2 result's Output is always a JSON *string*; test_state
+    # rejects null ("Field 'Output' must be a string"), so default to an empty-object string.
+    Output: str = "{}"
 
 
 # --- ASL Definition validation ---
