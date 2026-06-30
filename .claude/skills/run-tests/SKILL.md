@@ -26,20 +26,24 @@ make test-examples # = uv run pytest tests/examples -n auto
 
 Each runs an example end-to-end against the real `test_state` API. Gating:
 
-- **Auto-skipped unless `ROLE_ARN` is set** (an IAM role allowed to call `states:TestState`).
+- **Needs `ROLE_ARN`** (an IAM role allowed to call `states:TestState`). Locally it's read from
+  the gitignored `data.env` at the repo root (the test conftest loads it via `python-dotenv`), so
+  `make test-examples` just works without exporting anything. In CI there's no `data.env`, so
+  these auto-skip. An exported `ROLE_ARN` still wins.
 - Docker examples (`docker-batch/*`, parametrized over `dockerfile` + `bake`) skip unless a
   Docker daemon is reachable.
 - `mock-generation` skips unless `EXECUTION_ARN` is set; `advanced-deployed` skips unless
-  `STATE_MACHINE_ARN` / `FUNCTION_ARN` / `SFN_ROLE_ARN` are set.
+  `STATE_MACHINE_ARN` / `FUNCTION_ARN` / `SFN_ROLE_ARN` are set (add any of these to `data.env`
+  to run them locally too).
 - The **completeness guard** `test_all_example_scripts_are_covered` runs offline regardless and
   fails if any `examples/*/run*.py` isn't covered by a test.
 
-To exercise everything end-to-end:
+To exercise everything end-to-end, just ensure `data.env` has a valid `ROLE_ARN` (see
+[`docs/setup.md`](../../../docs/setup.md) for AWS credentials and creating the `test_state` role),
+then:
 
 ```bash
-export ROLE_ARN=arn:aws:iam::<account>:role/<role-with-test-state-perms>
 make test-examples
 ```
 
-See [`docs/setup.md`](../../../docs/setup.md) for AWS credentials and creating the `test_state`
-role. Run a single test with `uv run pytest tests/unit/test_runner_logic.py -k <name>`.
+Run a single test with `uv run pytest tests/unit/test_runner_logic.py -k <name>`.

@@ -171,9 +171,11 @@ Two layers, both run in parallel via pytest-xdist (`-n auto`):
   (`alter_mock_step`, `_format_definitions`, `has_token`, `_collect_all_state_names`, the
   context `State.Name`). Run with `make test` (`uv run pytest tests/unit -n auto`).
 - **`tests/examples/`** — integration: runs each example end-to-end against the **real**
-  `test_state` API. Marked `integration`/`docker`; **auto-skipped** unless `ROLE_ARN` is set
-  (Docker examples skip without a Docker daemon; mock-generation/advanced-deployed skip unless
-  their env vars are present). Run with `make test-examples`. A **completeness guard**
+  `test_state` API. Marked `integration`/`docker`. `ROLE_ARN` is read from the gitignored
+  `data.env` (the test conftest loads it via `python-dotenv`), so they run locally with
+  `make test-examples` and **auto-skip in CI** (no `data.env`). Docker examples skip without a
+  Docker daemon; mock-generation/advanced-deployed skip unless their env vars are present. A
+  **completeness guard**
   (`test_all_example_scripts_are_covered`) runs offline and fails if any `examples/*/run*.py`
   isn't covered — so a new example can't silently go untested (add it to the `COVERED` set).
 - **Run them via** the `run-tests` skill or the `/run-tests` project command (both wrap
