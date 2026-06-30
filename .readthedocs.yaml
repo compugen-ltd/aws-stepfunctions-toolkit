@@ -1,0 +1,28 @@
+# Read the Docs build configuration.
+# Docs: https://docs.readthedocs.com/platform/stable/config-file/v2.html
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.13"
+  jobs:
+    post_checkout:
+      # setuptools-scm derives the version from git tags; RTD's shallow clone
+      # hides them, so fetch full history + tags before install/build, otherwise
+      # the version (and the package install) falls back to 0.0.0.
+      - git fetch --tags --unshallow || true
+
+# Install the package itself (autodoc imports it) plus the docs extra.
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+
+sphinx:
+  configuration: docs/conf.py
+  # Treat warnings as errors so a broken docs build fails instead of publishing
+  # silently broken pages. Mirrors the CI docs job (`sphinx-build -W`).
+  fail_on_warning: true

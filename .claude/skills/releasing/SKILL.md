@@ -49,7 +49,9 @@ That "create a Release" click is the only manual trigger — day-to-day merges n
     marked `integration`/`docker` and needs AWS creds + Docker + `ROLE_ARN` — see the
     `run-tests` skill),
   - a build smoke job that runs `uv build` and asserts the wheel ships `workflow_runner/*` and
-    `py.typed` (packaging rule #5).
+    `py.typed` (packaging rule #5),
+  - a **`docs`** job: `uv sync --extra docs` then `sphinx-build -W` (strict) so a broken docs
+    build fails the PR before it ever reaches Read the Docs.
 - **`release.yml`** — on `release: [published]`: build -> PyPI publish -> attach artifacts.
 
 ### Things that will bite you
@@ -60,6 +62,26 @@ That "create a Release" click is the only manual trigger — day-to-day merges n
   **workflow filename `release.yml`**, and the **environment `pypi`**. If you rename either, update
   the PyPI Trusted Publisher too or publishing fails with an OIDC error.
 - The first PyPI upload needs the project/Trusted Publisher to exist (one-time setup on PyPI).
+
+## Documentation site (Read the Docs)
+
+The docs are a **Sphinx + MyST** site (sources are the `docs/*.md` files; see the project
+`CLAUDE.md` "Docs" section for the layout). Hosting and versioning are **separate from the PyPI
+release** and driven by Read the Docs, not GitHub Actions:
+
+- **Building:** `.readthedocs.yaml` tells RTD to `pip install .[docs]` and run Sphinx with
+  `fail_on_warning`. RTD rebuilds automatically on every push (via the repo webhook) once the
+  project is connected on the RTD side.
+- **Versioning the site:** RTD keeps a docs version **per git branch/tag**. `latest` tracks the
+  default branch; tagged releases (`vX.Y.Z`) become their own activated, selectable doc versions.
+  So the **same tag** that cuts a PyPI release also gives you a matching docs version — no extra
+  step in this repo, as long as RTD is set to build tags and you activate the version (one-time
+  per-version toggle, or "Activate new versions" in RTD).
+- **One-time RTD setup (dashboard, not in this repo):** connect the GitHub repo to the RTD
+  Business account, point it at `.readthedocs.yaml`, set privacy, and enable building tags. CI's
+  strict `docs` job is the local guardrail that the build will succeed on RTD.
+
+`make docs` builds the site locally (strict); `make docs-serve` live-reloads it.
 
 ## Local build / inspect
 

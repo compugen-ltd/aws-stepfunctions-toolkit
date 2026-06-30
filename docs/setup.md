@@ -75,7 +75,7 @@ aws iam create-role \
   --assume-role-policy-document file://trust-policy.json
 ```
 
-For a fully **mocked** run (the [quickstart](../examples/quickstart/)), the role needs no extra
+For a fully **mocked** run (the [quickstart](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/tree/master/examples/quickstart)), the role needs no extra
 permissions — the mocked steps don't actually call AWS. If you let a real integration run (e.g.
 `BatchJobResponseStrategy` submitting a job), attach the permissions that integration needs.
 
@@ -103,7 +103,7 @@ Attach to the **user/role whose credentials you run with** (from step 1):
 }
 ```
 
-Now set `role_arn` to that role ARN (the only value the [quickstart](../examples/quickstart/run.py)
+Now set `role_arn` to that role ARN (the only value the [quickstart](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/blob/master/examples/quickstart/run.py)
 asks you to edit).
 
 ## 3. Docker (only for container strategies)

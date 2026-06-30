@@ -31,6 +31,14 @@ examples = [
     "pytest>=8.0.0",
     "aws_lambda_powertools"
 ]
+# Documentation site (Sphinx + MyST Markdown + Furo). Installed by Read the Docs
+# (see .readthedocs.yaml) and the CI docs job. `pip install .[docs]` pulls these.
+docs = [
+    "sphinx>=8.1",
+    "myst-parser>=4.0",
+    "furo>=2024.8",
+    "sphinx-copybutton>=0.5",
+]
 
 [project.scripts]
 sfn-toolkit = "aws_stepfunctions_toolkit.cli:main"

@@ -1,7 +1,7 @@
 # Usage: a complete worked example
 
-This walks through running a small but realistic pipeline locally. It mirrors the runnable code
-in [`examples/run_tests.py`](../examples/run_tests.py).
+This walks through running a small but realistic pipeline locally, in the spirit of the runnable
+scripts under [`examples/`](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/tree/master/examples).
 
 ## The workflow
 

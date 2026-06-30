@@ -1,5 +1,7 @@
 # Python-generated files
 __pycache__/
+# Sphinx docs build output
+docs/_build/
 *.py[oc]
 build/
 dist/

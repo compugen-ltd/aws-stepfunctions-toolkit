@@ -186,9 +186,28 @@ Two layers, both run in parallel via pytest-xdist (`-n auto`):
 
 ## Docs
 
-User-facing docs live in `README.md` (concise) + `docs/*.md` (how-it-works, usage, strategies,
-control-flow, container-handler, cli-and-history). Keep docs in sync with actual signatures —
-the previous README documented an API that didn't exist.
+User-facing docs live in `README.md` (concise GitHub landing page) + `docs/*.md` (setup,
+how-it-works, usage, strategies, control-flow, container-handler, cli-and-history). Keep docs in
+sync with actual signatures — the previous README documented an API that didn't exist.
+
+These same `docs/*.md` files are the source of a **Sphinx + MyST** documentation site hosted on
+**Read the Docs** (Markdown is parsed by MyST — no reStructuredText). Layout:
+
+- `docs/conf.py` — Sphinx config (MyST, autodoc, napoleon, viewcode, Furo theme).
+- `docs/index.md` — site homepage + the `{toctree}` (the nav). **A new `docs/*.md` page only
+  appears in the site if it's added to a toctree in `index.md`.**
+- `docs/reference.md` — the API reference: a single `automodule:: aws_stepfunctions_toolkit` that
+  tracks `__all__`, so re-exported public symbols appear automatically (no per-symbol maintenance).
+- `.readthedocs.yaml` — the RTD build (Python 3.13, `pip install .[docs]`, `fail_on_warning`).
+- Docs deps are the **`docs` optional-extra** in `pyproject.toml` (an extra, not a dependency
+  group, so RTD's `extra_requirements: [docs]` and `uv sync --extra docs` both work).
+
+Build locally with **`make docs`** (strict, `-W`) or **`make docs-serve`** (live reload). The
+build must stay **warning-clean**: CI's `docs` job and RTD both fail on any Sphinx warning. Links
+from `docs/*.md` to files *outside* `docs/` (examples, LICENSE) must be **absolute GitHub URLs**,
+not `../` relative paths (those break the strict build and the hosted site). In-page links between
+docs pages use plain relative `other-page.md#anchor` (MyST resolves them; `myst_heading_anchors`
+generates the anchors). Releasing/versioning the site is in the `releasing` skill.
 
 ## Reference links
 

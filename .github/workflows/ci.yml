@@ -57,3 +57,26 @@ jobs:
         run: |
           python -m zipfile -l dist/*.whl | grep -q "workflow_runner/workflow_runner.py"
           python -m zipfile -l dist/*.whl | grep -q "py.typed"
+
+  docs:
+    name: Build docs (strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history + tags so setuptools-scm gives a real version (conf.py
+          # reads it for the docs title), matching the Read the Docs build.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync project + docs extra
+        run: uv sync --extra docs
+
+      # -W turns warnings into errors (broken links, bad toctree, autodoc import
+      # failures), mirroring `sphinx.fail_on_warning` in .readthedocs.yaml.
+      - name: Build the documentation site
+        run: uv run sphinx-build -W -b html docs docs/_build/html

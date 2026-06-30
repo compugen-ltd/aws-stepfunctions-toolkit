@@ -1,4 +1,4 @@
-.PHONY: build build-publish publish tag test test-examples run-example
+.PHONY: build build-publish publish tag test test-examples run-example docs docs-serve docs-clean
 
 SHELL=/bin/bash
 
@@ -32,3 +32,15 @@ test:
 
 test-examples:
 	uv run pytest tests/examples -n auto
+
+# Build the documentation site (Sphinx + MyST). -W = warnings are errors, same
+# as CI and Read the Docs. Needs the docs extra: `uv sync --extra docs`.
+docs:
+	uv run --extra docs sphinx-build -W -b html docs docs/_build/html
+
+# Live-reloading local preview at http://127.0.0.1:8000 (requires sphinx-autobuild).
+docs-serve:
+	uv run --extra docs --with sphinx-autobuild sphinx-autobuild docs docs/_build/html
+
+docs-clean:
+	rm -rf docs/_build
