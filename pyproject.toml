@@ -42,6 +42,8 @@ dev = [
     "ipykernel>=7.1.0",
     "ipython>=9.8.0",
     "notebook>=7.5.0",
+    "pytest>=8.0.0",
+    "pytest-xdist>=3.5.0",
 ]
 
 [project.urls]
@@ -74,6 +76,11 @@ keyring-provider = "subprocess"
 
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: end-to-end tests that call the real test_state API (need AWS creds + ROLE_ARN)",
+    "docker: integration tests that also require a running Docker daemon",
+]
 filterwarnings = [
     "ignore:.*ssl.*deprecated.*",
     "ignore::requests.RequestsDependencyWarning",

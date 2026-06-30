@@ -5,8 +5,9 @@ Runs a small pipeline where a Batch (`.sync`) step executes in a **real local co
 plain Dockerfile ([`DockerfileImage`](../../docs/strategies.md#image-sources)). It also runs a
 **nested state machine** (`startExecution.sync:2`, the `child_flow` step) and a **Lambda** step.
 
-To build the same container via `docker buildx bake` instead, swap the `image_source` to
-`BakeImage` — there's a commented example in [`run.py`](run.py), and the bake file is included.
+To build the same container via `docker buildx bake` instead of a plain Dockerfile, set
+`IMAGE_SOURCE=bake` (the scripts switch between `DockerfileImage` and `BakeImage`); the bake file
+is included.
 
 ### Per-SFN step overrides (hierarchical keys)
 
@@ -43,6 +44,7 @@ parent's `example_batch_1` builds a real container while the child's same-named 
 ```bash
 uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py                  # child_flow mocked
 uv run --python=3.13 --with aws-stepfunctions-toolkit python run_with_overrides.py   # child runs, per-step overrides
+IMAGE_SOURCE=bake uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py   # build via docker buildx bake
 ```
 
 Both build the `example_batch_1` container, run it locally, and feed each step's output to the

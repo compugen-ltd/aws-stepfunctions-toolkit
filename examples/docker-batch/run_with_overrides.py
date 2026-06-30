@@ -38,22 +38,26 @@ workfolder = "/data"
 variables = {"workfolder": workfolder}
 volumes = [(tempfile.mkdtemp(), workfolder)]
 
+# How to build the example_batch_1 image: a plain Dockerfile (default) or docker buildx bake.
+if os.environ.get("IMAGE_SOURCE") == "bake":
+    image_source = BakeImage(
+        bake_file=str(HERE / "docker-bake.hcl"),
+        target="example_batch_1",
+        base_dir=str(HERE),
+    )
+else:
+    image_source = DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1"))
+
 # The "main" machine and the nested "child_flow" machine share the same step names
 # (example_batch_1/2, example_lambda_1). A flat key matches a step anywhere; a
 # hierarchical "<parent-state>/<step>" key overrides just that occurrence — so the
 # parent's example_batch_1 builds a real container while the child's steps are mocked.
 mock_mapping = {
     # --- "main" steps ---
-    # Build this Batch step's container from a plain Dockerfile and run it locally:
+    # Build this Batch step's container and run it locally:
     "example_batch_1": DockerBatchStrategy(
         s3_bucket="placeholder",
-        image_source=DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1")),
-        # To build via `docker buildx bake` instead, swap the image source:
-        #   image_source=BakeImage(
-        #       bake_file=str(HERE / "docker-bake.hcl"),
-        #       target="example_batch_1",
-        #       base_dir=str(HERE),
-        #   ),
+        image_source=image_source,
         volumes=volumes,
         variables=variables,
     ),

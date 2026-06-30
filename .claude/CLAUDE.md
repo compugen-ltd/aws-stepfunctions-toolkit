@@ -161,13 +161,19 @@ present → `send_task_success`; else write to `OUTPUT_PATH`.
 
 ## Testing
 
-- The example tests (`examples/run_tests.py`, `make run-example`) make **real** `test_state` API
-  calls and build/run Docker containers — they need Docker running, AWS credentials, and a
-  `ROLE_ARN` env var (a role allowed to call `test_state`).
-- Offline, you can only verify the pure-Python pieces (strategy result encoding, `ImageSource`
-  type guard, `BatchJobInterface` skip/`OUTPUT_PATH`, `resolve_region`) — `runner.start` always
-  hits AWS.
-- Sanity after API/packaging changes:
+Two layers, both run in parallel via pytest-xdist (`-n auto`):
+
+- **`tests/unit/`** — offline, no AWS/Docker. The primary safety net (CI-friendly). Covers the
+  pure logic: strategy result encoding, `ImageSource` type guard, `resolve_region`,
+  `BatchJobInterface` skip/`OUTPUT_PATH`, models, and the runner's rewrites
+  (`alter_mock_step`, `_format_definitions`, `has_token`, `_collect_all_state_names`, the
+  context `State.Name`). Run with `make test` (`uv run pytest tests/unit -n auto`).
+- **`tests/examples/`** — integration: runs each example end-to-end against the **real**
+  `test_state` API. Marked `integration`/`docker`; **auto-skipped** unless `ROLE_ARN` is set
+  (Docker examples skip without a Docker daemon; mock-generation/advanced-deployed skip unless
+  their env vars are present). Run with `make test-examples`.
+- `runner.start` always hits AWS, so end-to-end behavior is only covered by the integration
+  layer. Sanity after API/packaging changes:
   `uv run python -c "import aws_stepfunctions_toolkit as t; print(len(t.__all__))"` and a build.
 
 ## Docs

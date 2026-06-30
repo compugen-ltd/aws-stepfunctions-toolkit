@@ -22,3 +22,9 @@ publish:
 
 run-example:
 	uv run python examples/docker-batch/run.py
+
+test:
+	uv run pytest tests/unit -n auto
+
+test-examples:
+	uv run pytest tests/examples -n auto

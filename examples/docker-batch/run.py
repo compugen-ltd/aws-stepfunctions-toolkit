@@ -1,10 +1,11 @@
-"""Docker batch example: build a step's container from a Dockerfile and run it locally.
+"""Docker batch example: build a step's container and run it locally.
 
 Set ROLE_ARN, then: uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 Requires Docker running. AWS setup: ../../docs/setup.md
 
-The basic version — the nested `child_flow` step is mocked with a StaticMockResponseStrategy.
-See run_with_overrides.py to run the child machine for real with per-step hierarchical overrides.
+The batch container is built from a plain Dockerfile by default; set IMAGE_SOURCE=bake to
+build it via `docker buildx bake` instead. The nested `child_flow` step is mocked with a
+StaticMockResponseStrategy — see run_with_overrides.py to run the child machine for real.
 """
 
 import json
@@ -16,7 +17,7 @@ from aws_stepfunctions_toolkit import (
     WorkflowRunner,
     DockerBatchStrategy,
     DockerfileImage,
-    BakeImage,  # noqa: F401  (used in the commented bake alternative below)
+    BakeImage,
     StaticMockResponseStrategy,
     CallableStrategy,
 )
@@ -34,17 +35,21 @@ workfolder = "/data"
 variables = {"workfolder": workfolder}
 volumes = [(tempfile.mkdtemp(), workfolder)]
 
+# How to build the example_batch_1 image: a plain Dockerfile (default) or docker buildx bake.
+if os.environ.get("IMAGE_SOURCE") == "bake":
+    image_source = BakeImage(
+        bake_file=str(HERE / "docker-bake.hcl"),
+        target="example_batch_1",
+        base_dir=str(HERE),
+    )
+else:
+    image_source = DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1"))
+
 mock_mapping = {
-    # Build this Batch step's container from a plain Dockerfile and run it locally:
+    # Build this Batch step's container and run it locally:
     "example_batch_1": DockerBatchStrategy(
         s3_bucket="placeholder",
-        image_source=DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1")),
-        # To build via `docker buildx bake` instead, swap the image source:
-        #   image_source=BakeImage(
-        #       bake_file=str(HERE / "docker-bake.hcl"),
-        #       target="example_batch_1",
-        #       base_dir=str(HERE),
-        #   ),
+        image_source=image_source,
         volumes=volumes,
         variables=variables,
     ),
