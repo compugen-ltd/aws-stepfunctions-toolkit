@@ -3,8 +3,8 @@
 **Run a Step Functions state machine end-to-end on your laptop — and choose, per step, how
 each one runs.**
 
-This package was created out of the need to test a Step Functions pipeline built almost entirely
-from `batch:submitJob.sync` steps. AWS's
+The motivation to create this package was the need to test a Step Functions pipeline built almost
+entirely from `batch:submitJob.sync` steps. AWS's
 [`test_state`](https://docs.aws.amazon.com/step-functions/latest/apireference/API_TestState.html)
 API does not currently support `.sync` integrations or `.waitForTaskToken`, and deploying and
 running the state machine on AWS to validate each change made iterating impractical.
