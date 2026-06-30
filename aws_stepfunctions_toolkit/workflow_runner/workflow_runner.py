@@ -24,19 +24,24 @@ logger = logging.getLogger(__name__)
 # --- Main Orchestrator ---
 class WorkflowRunner:
     RESOURCE_OUTPUT_PATTERNS: Final[dict[str, tuple[str, str]]] = {
-        "arn:aws:states:::states:startExecution.sync:2": ("$states.result.Output", "$parse($states.result.Output)"),
+        "arn:aws:states:::states:startExecution.sync:2": (
+            "$states.result.Output",
+            "$parse($states.result.Output)",
+        ),
     }
 
     def __init__(
-            self,
-            role_arn: str,
-            asl_registry: Mapping[str, AslDefinitionDict],
-            mock_mapping: Mapping[str, StateExecutionStrategy],
-            variables: dict | None = None,
-            input_validation_function: Callable[[dict], None] | None = None,
-            region: str | None = None,
+        self,
+        role_arn: str,
+        asl_registry: Mapping[str, AslDefinitionDict],
+        mock_mapping: Mapping[str, StateExecutionStrategy],
+        variables: dict | None = None,
+        input_validation_function: Callable[[dict], None] | None = None,
+        region: str | None = None,
     ):
-        self.client: SFNClient = boto3.client('stepfunctions', region_name=resolve_region(region))
+        self.client: SFNClient = boto3.client(
+            "stepfunctions", region_name=resolve_region(region)
+        )
         self.role_arn = role_arn
         self.default_strategy = StandardFlowStrategy()
         self.variables = variables or dict()
@@ -51,11 +56,21 @@ class WorkflowRunner:
         self.asl_registry = asl_registry
 
     def has_token(self, state_def: dict) -> bool:
-        return jmespath.search("Arguments.ContainerOverrides.Environment[?Name=='TaskToken']", state_def) is not None
+        return (
+            jmespath.search(
+                "Arguments.ContainerOverrides.Environment[?Name=='TaskToken']",
+                state_def,
+            )
+            is not None
+        )
 
-    def _get_context_for_state(self, state_def: dict, state_input, state_name: str) -> str:
+    def _get_context_for_state(
+        self, state_def: dict, state_input, state_name: str
+    ) -> str:
         ctx = ExecutionContext().with_input(state_input)
-        ctx.State.Name = state_name  # so ASL expressions like $states.context.State.Name resolve
+        ctx.State.Name = (
+            state_name  # so ASL expressions like $states.context.State.Name resolve
+        )
         if self.has_token(state_def):
             ctx = ctx.with_task_token()
         return ctx.model_dump_json(exclude_none=True)
@@ -75,18 +90,23 @@ class WorkflowRunner:
         resource = state_def.get("Resource", "")
         output = state_def.get("Output")
         if resource == "arn:aws:states:::lambda:invoke" and output:
-            return {**state_def, "Output": output.replace("$states.result.Payload", "$parse($states.result.Payload)")}
+            return {
+                **state_def,
+                "Output": output.replace(
+                    "$states.result.Payload", "$parse($states.result.Payload)"
+                ),
+            }
         return state_def
 
     def run_sub_machine(
-            self,
-            asl_def: AslDefinitionDict,
-            initial_input: dict,
-            mock_mapping: Mapping[str, StateExecutionStrategy],
-            start_: str | None = None,
-            end_: str | None = None,
-            parent_path: str = ""
-        ) -> dict:
+        self,
+        asl_def: AslDefinitionDict,
+        initial_input: dict,
+        mock_mapping: Mapping[str, StateExecutionStrategy],
+        start_: str | None = None,
+        end_: str | None = None,
+        parent_path: str = "",
+    ) -> dict:
         current_state = start_ or asl_def["StartAt"]
         data = initial_input
 
@@ -101,27 +121,45 @@ class WorkflowRunner:
             state_def = asl_def["States"][current_state]
 
             # Select Strategy: Try hierarchical key first, then flat key
-            hierarchical_key = f"{parent_path}/{current_state}" if parent_path else current_state
+            hierarchical_key = (
+                f"{parent_path}/{current_state}" if parent_path else current_state
+            )
             if hierarchical_key in mock_mapping:
                 strategy = mock_mapping[hierarchical_key]
                 raw_result = strategy.execute(
-                    current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input, current_state),
-                    parent_path=parent_path
+                    current_state,
+                    state_def,
+                    data,
+                    self,
+                    context=self._get_context_for_state(
+                        state_def, initial_input, current_state
+                    ),
+                    parent_path=parent_path,
                 )
             elif current_state in mock_mapping:
                 strategy = mock_mapping[current_state]
                 raw_result = strategy.execute(
-                    current_state, state_def, data, self,
-                    context=self._get_context_for_state(state_def, initial_input, current_state),
-                    parent_path=parent_path
+                    current_state,
+                    state_def,
+                    data,
+                    self,
+                    context=self._get_context_for_state(
+                        state_def, initial_input, current_state
+                    ),
+                    parent_path=parent_path,
                 )
             else:
                 strategy = self.default_strategy
                 raw_result = strategy.execute(
-                    current_state, state_def, data, self, mock_mapping=mock_mapping,
-                    context=self._get_context_for_state(state_def, initial_input, current_state),
-                    parent_path=parent_path
+                    current_state,
+                    state_def,
+                    data,
+                    self,
+                    mock_mapping=mock_mapping,
+                    context=self._get_context_for_state(
+                        state_def, initial_input, current_state
+                    ),
+                    parent_path=parent_path,
                 )
 
             logger.debug(f"Strategy for '{current_state}': {type(strategy).__name__}")
@@ -132,10 +170,10 @@ class WorkflowRunner:
                 roleArn=self.role_arn,
                 variables=json.dumps(self.variables),
                 input=json.dumps(data),
-                **raw_result
+                **raw_result,
             )
 
-            if response.get('status') == 'FAILED':
+            if response.get("status") == "FAILED":
                 raise RuntimeError(
                     f"State '{current_state}' failed.\n"
                     f"  Error: {response.get('error')}\n"
@@ -143,7 +181,7 @@ class WorkflowRunner:
                     f"  Input keys: {list(data.keys()) if isinstance(data, dict) else type(data).__name__}"
                 )
 
-            raw_output = response.get('output')
+            raw_output = response.get("output")
             if raw_output is None:
                 raise RuntimeError(
                     f"State '{current_state}' returned no output. "
@@ -160,7 +198,7 @@ class WorkflowRunner:
             if end_ and current_state == end_:
                 break
 
-            next_state = response.get('nextState')
+            next_state = response.get("nextState")
             logger.debug(f"{current_state} -> {next_state}")
             current_state = next_state
 
@@ -182,18 +220,30 @@ class WorkflowRunner:
         return names
 
     @staticmethod
-    def _format_definitions(asl_registry: Mapping[str, AslDefinitionDict]) -> Mapping[str, AslDefinitionDict]:
+    def _format_definitions(
+        asl_registry: Mapping[str, AslDefinitionDict],
+    ) -> Mapping[str, AslDefinitionDict]:
         for asl_name, asl_def in asl_registry.items():
             states = asl_def["States"]
             for stage_name, state_def in states.items():
                 resource = state_def.get("Resource")
-                if resource and resource in WorkflowRunner.RESOURCE_OUTPUT_PATTERNS and state_def.get("Output"):
-                    old_pattern, new_pattern = WorkflowRunner.RESOURCE_OUTPUT_PATTERNS[resource]
-                    states[stage_name]["Output"] = state_def["Output"].replace(old_pattern, new_pattern)
+                if (
+                    resource
+                    and resource in WorkflowRunner.RESOURCE_OUTPUT_PATTERNS
+                    and state_def.get("Output")
+                ):
+                    old_pattern, new_pattern = WorkflowRunner.RESOURCE_OUTPUT_PATTERNS[
+                        resource
+                    ]
+                    states[stage_name]["Output"] = state_def["Output"].replace(
+                        old_pattern, new_pattern
+                    )
             asl_registry[asl_name]["States"] = states
         return asl_registry
 
-    def _validate_start(self, initial_input: dict, mock_mapping: Mapping[str, StateExecutionStrategy]):
+    def _validate_start(
+        self, initial_input: dict, mock_mapping: Mapping[str, StateExecutionStrategy]
+    ):
         if self.input_validation_function:
             self.input_validation_function(initial_input)
 
@@ -212,11 +262,17 @@ class WorkflowRunner:
                 f"Available states: {sorted(all_state_names)}"
             )
 
-    def start(self, initial_input: dict, start: str | None = None,
-              end: str | None = None, parent_path: str = ""):
-
+    def start(
+        self,
+        initial_input: dict,
+        start: str | None = None,
+        end: str | None = None,
+        parent_path: str = "",
+    ):
         self.asl_registry = self._format_definitions(self.asl_registry)
         self._validate_start(initial_input, self.mock_mapping)
 
         main_definition = self.asl_registry["main"]
-        return self.run_sub_machine(main_definition, initial_input, self.mock_mapping, start, end, parent_path)
+        return self.run_sub_machine(
+            main_definition, initial_input, self.mock_mapping, start, end, parent_path
+        )

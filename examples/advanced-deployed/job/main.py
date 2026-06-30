@@ -2,6 +2,7 @@
 
 Reads its input arg, writes result JSON to OUTPUT_PATH (the container contract).
 """
+
 import json
 import os
 import sys

@@ -13,7 +13,7 @@ class EventFilter:
 
     def by_type(self, event_type: str) -> list[HistoryEventTypeDef]:
         """Return all events matching the given type."""
-        return [e for e in self.events if e.get('type') == event_type]
+        return [e for e in self.events if e.get("type") == event_type]
 
     def by_state_name(self, state_name: str) -> list[HistoryEventTypeDef]:
         """Return all events from state entry until next state entry."""
@@ -21,10 +21,10 @@ class EventFilter:
         capturing = False
 
         for event in self.events:
-            if event.get('stateEnteredEventDetails', {}).get('name') == state_name:
+            if event.get("stateEnteredEventDetails", {}).get("name") == state_name:
                 capturing = True
                 result.append(event)
-            elif capturing and event.get('stateEnteredEventDetails', {}).get('name'):
+            elif capturing and event.get("stateEnteredEventDetails", {}).get("name"):
                 break
             elif capturing:
                 result.append(event)
@@ -33,13 +33,19 @@ class EventFilter:
 
     def by_resource_type(self, resource_type: str) -> list[HistoryEventTypeDef]:
         """Return all task events matching the resource type."""
-        return [e for e in self.events
-                if e.get('taskStartedEventDetails', {}).get('resourceType') == resource_type]
+        return [
+            e
+            for e in self.events
+            if e.get("taskStartedEventDetails", {}).get("resourceType") == resource_type
+        ]
 
     def by_resource(self, resource: str) -> list[HistoryEventTypeDef]:
         """Return all task events matching the resource."""
-        return [e for e in self.events
-                if e.get('taskStartedEventDetails', {}).get('resource') == resource]
+        return [
+            e
+            for e in self.events
+            if e.get("taskStartedEventDetails", {}).get("resource") == resource
+        ]
 
 
 class ExecutionHistory:
@@ -50,19 +56,21 @@ class ExecutionHistory:
         self.filter = EventFilter(events)
 
     @classmethod
-    def from_execution_arn(cls, sfn_client: SFNClient, execution_arn: str) -> 'ExecutionHistory':
+    def from_execution_arn(
+        cls, sfn_client: SFNClient, execution_arn: str
+    ) -> "ExecutionHistory":
         """Retrieve complete execution history with pagination."""
         history = []
         next_token = None
 
         while True:
-            params = {'executionArn': execution_arn}
+            params = {"executionArn": execution_arn}
             if next_token:
-                params['nextToken'] = next_token
+                params["nextToken"] = next_token
 
             response = sfn_client.get_execution_history(**params)
-            history.extend(response['events'])
-            next_token = response.get('nextToken')
+            history.extend(response["events"])
+            next_token = response.get("nextToken")
 
             if not next_token:
                 break
@@ -74,7 +82,9 @@ class ExecutionHistory:
         for event in self.events:
             yield event
 
-    def iter(self, start: int | HistoryEventTypeDef = None) -> Iterator[HistoryEventTypeDef]:
+    def iter(
+        self, start: int | HistoryEventTypeDef = None
+    ) -> Iterator[HistoryEventTypeDef]:
         """Iterate over history events starting from given index."""
         if start is None:
             start_idx = 0

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Json
 # --- Execution Context (AWS spec) ---
 # Cannot use `from __future__ import annotations` — breaks Pydantic field resolution for nested models.
 
+
 class _Execution(BaseModel):
     Id: str = "String"
     Input: Json = "{}"
@@ -53,13 +54,17 @@ class ExecutionContext(BaseModel):
 class StartExecutionResult(BaseModel):
     OutputDetails: dict = {"Included": False}
     Input: str = ""
-    ExecutionArn: str = "arn:aws:states:us-east-1:000000000000:execution:ExampleStateMachine:test"
+    ExecutionArn: str = (
+        "arn:aws:states:us-east-1:000000000000:execution:ExampleStateMachine:test"
+    )
     RedriveCount: int = 0
     InputDetails: dict = {"Included": False}
     RedriveStatus: str = "NOT_REDRIVABLE"
     RedriveStatusReason: str = "Execution is SUCCEEDED and cannot be redriven"
     StartDate: str = "1769015654832"
-    StateMachineArn: str = "arn:aws:states:us-east-1:000000000000:stateMachine:ExampleStateMachine"
+    StateMachineArn: str = (
+        "arn:aws:states:us-east-1:000000000000:stateMachine:ExampleStateMachine"
+    )
     Status: str = "SUCCEEDED"
     StopDate: str = "1769015943200"
     Output: str | None = None

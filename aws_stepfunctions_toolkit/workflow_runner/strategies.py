@@ -29,8 +29,14 @@ logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 
-def get_container_overrides(sfn_client, state_def: dict, role_arn: str, variables: dict,
-                            input_data: dict, context: str | None) -> dict:
+def get_container_overrides(
+    sfn_client,
+    state_def: dict,
+    role_arn: str,
+    variables: dict,
+    input_data: dict,
+    context: str | None,
+) -> dict:
     """Use the test API to resolve a Batch task's ContainerOverrides (Command + Environment).
 
     Runs ``test_state`` in TRACE mode with an empty mock so AWS evaluates the
@@ -43,7 +49,7 @@ def get_container_overrides(sfn_client, state_def: dict, role_arn: str, variable
         input=json.dumps(input_data),
         inspectionLevel="TRACE",
         context=context,
-        mock={'result': json.dumps({}), "fieldValidationMode": "PRESENT"}
+        mock={"result": json.dumps({}), "fieldValidationMode": "PRESENT"},
     )
     inspection = response.get("inspectionData", {})
     after_args = inspection.get("afterArguments")
@@ -58,8 +64,15 @@ def get_container_overrides(sfn_client, state_def: dict, role_arn: str, variable
 # --- 1. Execution Strategy Interface ---
 class StateExecutionStrategy(ABC):
     @abstractmethod
-    def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str | None = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
+    def execute(
+        self,
+        state_name: str,
+        state_def: dict,
+        input_data: dict,
+        orchestrator: WorkflowRunner,
+        context: str | None = None,
+        parent_path: str = "",
+    ) -> TestStateInputTypeDefSlim:
         pass
 
 
@@ -75,11 +88,19 @@ class DockerBatchStrategy(StateExecutionStrategy):
     mounts a writable temp dir at ``/tmp`` and injects ``OUTPUT_PATH``/``S3_OUTPUT_PATH``).
     """
 
-    def __init__(self, s3_bucket: str, image_source: ImageSource, execution_id: str | None = None,
-                 volumes: list | None = None, variables: dict | None = None,
-                 user: str | None = None, gpus: str | None = None,
-                 extra_run_envs: dict | None = None, region: str | None = None,
-                 s3_client: S3Client | None = None):
+    def __init__(
+        self,
+        s3_bucket: str,
+        image_source: ImageSource,
+        execution_id: str | None = None,
+        volumes: list | None = None,
+        variables: dict | None = None,
+        user: str | None = None,
+        gpus: str | None = None,
+        extra_run_envs: dict | None = None,
+        region: str | None = None,
+        s3_client: S3Client | None = None,
+    ):
         if not isinstance(image_source, ImageSource):
             raise TypeError(
                 "image_source must be an ImageSource (e.g. DockerfileImage, PrebuiltImage, BakeImage)"
@@ -87,7 +108,9 @@ class DockerBatchStrategy(StateExecutionStrategy):
         self.s3_bucket = s3_bucket
         self.image_source = image_source
         self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
-        self.s3_client: S3Client = s3_client or boto3.client('s3', region_name=resolve_region(region))
+        self.s3_client: S3Client = s3_client or boto3.client(
+            "s3", region_name=resolve_region(region)
+        )
         self.volumes = volumes
         self.variables = variables or dict()
         self.user = user
@@ -103,7 +126,8 @@ class DockerBatchStrategy(StateExecutionStrategy):
                 "image": run_image,
                 "command": command,
                 "envs": {"S3_OUTPUT_PATH": s3_out, "OUTPUT_PATH": output_path}
-                        | (self.extra_run_envs or {}) | extra_envs,
+                | (self.extra_run_envs or {})
+                | extra_envs,
                 "remove": True,
                 "user": self.user,
                 "volumes": (self.volumes or []) + [(str(tmpdir), "/tmp", "rw")],
@@ -116,12 +140,24 @@ class DockerBatchStrategy(StateExecutionStrategy):
             shutil.rmtree(tmpdir, ignore_errors=True)
         return data
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
         s3_out = f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
 
         overrides = get_container_overrides(
-            orchestrator.client, state_def, orchestrator.role_arn,
-            self.variables, input_data, context
+            orchestrator.client,
+            state_def,
+            orchestrator.role_arn,
+            self.variables,
+            input_data,
+            context,
         )
         command = overrides["Command"]
         envs = {ele["Name"]: ele["Value"] for ele in overrides["Environment"]}
@@ -153,10 +189,16 @@ class LocalExecutionStrategy(StateExecutionStrategy):
         LocalExecutionStrategy(entrypoint=["python", "jobs/process_data/main.py"])
     """
 
-    def __init__(self, entrypoint: list[str] | None = None, s3_bucket: str | None = None,
-                 execution_id: str | None = None, cwd: str | None = None,
-                 extra_env: dict | None = None, inherit_env: bool = True,
-                 variables: dict | None = None):
+    def __init__(
+        self,
+        entrypoint: list[str] | None = None,
+        s3_bucket: str | None = None,
+        execution_id: str | None = None,
+        cwd: str | None = None,
+        extra_env: dict | None = None,
+        inherit_env: bool = True,
+        variables: dict | None = None,
+    ):
         self.entrypoint = list(entrypoint) if entrypoint else []
         self.s3_bucket = s3_bucket
         self.execution_id = execution_id or f"test-{uuid.uuid4().hex[:6]}"
@@ -168,8 +210,11 @@ class LocalExecutionStrategy(StateExecutionStrategy):
     def _run_local(self, command, extra_envs: dict, state_name: str) -> str:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "output.json"
-            s3_out = (f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
-                      if self.s3_bucket else "")
+            s3_out = (
+                f"s3://{self.s3_bucket}/{self.execution_id}/{state_name}/output.json"
+                if self.s3_bucket
+                else ""
+            )
             env = dict(os.environ) if self.inherit_env else {}
             env.update(extra_envs)
             env.update(self.extra_env)
@@ -187,10 +232,22 @@ class LocalExecutionStrategy(StateExecutionStrategy):
                 )
             return output_path.read_text()
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
         overrides = get_container_overrides(
-            orchestrator.client, state_def, orchestrator.role_arn,
-            self.variables, input_data, context
+            orchestrator.client,
+            state_def,
+            orchestrator.role_arn,
+            self.variables,
+            input_data,
+            context,
         )
         command = overrides["Command"]
         envs = {ele["Name"]: ele["Value"] for ele in overrides["Environment"]}
@@ -212,27 +269,51 @@ class CallableStrategy(StateExecutionStrategy):
     def __init__(self, handler: Callable[[dict], dict | list | str]):
         self.handler = handler
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
         result = self.handler(input_data)
         if not isinstance(result, str):
             result = json.dumps(result)
-        return {"mock": {'result': result}, "context": context}
+        return {"mock": {"result": result}, "context": context}
 
 
 # --- 3. Implementation: AppConfig Strategy ---
 class GetLatestConfigurationStrategy(StateExecutionStrategy):
     """Resolves a state's result from AWS AppConfig (start session + get latest configuration)."""
 
-    def __init__(self, application: str, environment: str, configuration_profile: str,
-                 appconfigdata_client: AppConfigDataClient | None = None, region: str | None = None):
+    def __init__(
+        self,
+        application: str,
+        environment: str,
+        configuration_profile: str,
+        appconfigdata_client: AppConfigDataClient | None = None,
+        region: str | None = None,
+    ):
         self.application = application
         self.environment = environment
         self.configuration_profile = configuration_profile
         if not appconfigdata_client:
-            appconfigdata_client = boto3.client("appconfigdata", region_name=resolve_region(region))
+            appconfigdata_client = boto3.client(
+                "appconfigdata", region_name=resolve_region(region)
+            )
         self.appconfigdata_client = appconfigdata_client
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context: str = "{}", parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context: str = "{}",
+        parent_path="",
+    ):
         appconfigdata_client = self.appconfigdata_client
         response = appconfigdata_client.start_configuration_session(
             ApplicationIdentifier=self.application,
@@ -245,7 +326,7 @@ class GetLatestConfigurationStrategy(StateExecutionStrategy):
         )
 
         data = response["Configuration"].read().decode("utf8")
-        return {"mock": {'result': data}, "context": context}
+        return {"mock": {"result": data}, "context": context}
 
 
 # --- 4. Implementation: Static Mock Strategy ---
@@ -255,17 +336,31 @@ class StaticMockResponseStrategy(StateExecutionStrategy):
     def __init__(self, result: str):
         self.result = result
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
-        return {"mock": {'result': self.result}, "context": context}
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
+        return {"mock": {"result": self.result}, "context": context}
 
 
 # --- 5. Implementation: Batch Job Submission Strategy ---
 class BatchJobResponseStrategy(StateExecutionStrategy):
     """Submits a real AWS Batch job (rather than running the container locally)."""
 
-    def __init__(self, job_queue: str, job_definition: str, job_name: str | None = None,
-                 batch_client: BatchClient | None = None, variables: dict | None = None,
-                 region: str | None = None):
+    def __init__(
+        self,
+        job_queue: str,
+        job_definition: str,
+        job_name: str | None = None,
+        batch_client: BatchClient | None = None,
+        variables: dict | None = None,
+        region: str | None = None,
+    ):
         if not batch_client:
             batch_client = boto3.client("batch", region_name=resolve_region(region))
         self.client = batch_client
@@ -274,10 +369,22 @@ class BatchJobResponseStrategy(StateExecutionStrategy):
         self.job_definition = job_definition
         self.variables = variables or {}
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
         container_overrides = get_container_overrides(
-            orchestrator.client, state_def, orchestrator.role_arn,
-            self.variables, input_data, context
+            orchestrator.client,
+            state_def,
+            orchestrator.role_arn,
+            self.variables,
+            input_data,
+            context,
         )
         environment = [
             KeyValuePairTypeDef(name=env["Name"], value=env["Value"])
@@ -289,9 +396,8 @@ class BatchJobResponseStrategy(StateExecutionStrategy):
             jobQueue=self.job_queue,
             jobDefinition=self.job_definition,
             containerOverrides=ContainerOverridesTypeDef(
-                environment=environment,
-                command=container_overrides["Command"]
-            )
+                environment=environment, command=container_overrides["Command"]
+            ),
         )
 
         # TODO: get results from s3
@@ -309,9 +415,15 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
     def get_items(self, input_data):
         pass
 
-    def execute(self, state_name: str, state_def: dict, input_data: dict, orchestrator: WorkflowRunner,
-                context: str | None = None, parent_path: str = "") -> TestStateInputTypeDefSlim:
-
+    def execute(
+        self,
+        state_name: str,
+        state_def: dict,
+        input_data: dict,
+        orchestrator: WorkflowRunner,
+        context: str | None = None,
+        parent_path: str = "",
+    ) -> TestStateInputTypeDefSlim:
         mock_mapping = orchestrator.mock_mapping
         items = self.get_items(input_data)
         response = orchestrator.client.test_state(
@@ -320,17 +432,26 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
             inspectionLevel="TRACE",
             variables=json.dumps(orchestrator.variables),
             input=json.dumps(input_data),
-            mock={
-                "result": json.dumps(items)
-            }
+            mock={"result": json.dumps(items)},
         )
         if response.get("inspectionData", {}).get("afterItemSelector") is None:
-            raise RuntimeError(f"Expected afterItemSelector in inspectionData but got: {response.get('inspectionData')}")
+            raise RuntimeError(
+                f"Expected afterItemSelector in inspectionData but got: {response.get('inspectionData')}"
+            )
 
-        items_ = json.loads(response.get("inspectionData", {}).get("afterItemSelector", "[]"))
+        items_ = json.loads(
+            response.get("inspectionData", {}).get("afterItemSelector", "[]")
+        )
         new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
-        resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping, parent_path=new_parent_path) for item
-                in items_]
+        resp = [
+            orchestrator.run_sub_machine(
+                state_def["ItemProcessor"],
+                item,
+                mock_mapping=mock_mapping,
+                parent_path=new_parent_path,
+            )
+            for item in items_
+        ]
         return {"mock": {"result": json.dumps(resp)}, "context": context}
 
 
@@ -338,7 +459,16 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
 class StandardFlowStrategy(StateExecutionStrategy):
     """Handles Map, Parallel, and Nested SMs via recursion."""
 
-    def execute(self, state_name, state_def, input_data, orchestrator, context=None, mock_mapping=None, parent_path=""):
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        mock_mapping=None,
+        parent_path="",
+    ):
         state_type = state_def.get("Type")
         resource = state_def.get("Resource", "")
 
@@ -353,15 +483,19 @@ class StandardFlowStrategy(StateExecutionStrategy):
                 inspectionLevel="TRACE",
                 variables=json.dumps(orchestrator.variables),
                 input=json.dumps(input_data),
-                mock={
-                    "result": json.dumps(result)
-                }
+                mock={"result": json.dumps(result)},
             )
-            if response.get('status') == 'FAILED':
-                raise RuntimeError(f"State {state_name} failed: {response.get('error')}\n{response.get('cause')}")
+            if response.get("status") == "FAILED":
+                raise RuntimeError(
+                    f"State {state_name} failed: {response.get('error')}\n{response.get('cause')}"
+                )
 
-            input_data_to_machine = json.loads(response["inspectionData"]["afterArguments"])["Input"]
-            new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
+            input_data_to_machine = json.loads(
+                response["inspectionData"]["afterArguments"]
+            )["Input"]
+            new_parent_path = (
+                f"{parent_path}/{state_name}" if parent_path else state_name
+            )
             sub_asl = orchestrator.get_asl(state_name)
             if sub_asl is None:
                 raise RuntimeError(
@@ -369,20 +503,45 @@ class StandardFlowStrategy(StateExecutionStrategy):
                     f"Available: {list(orchestrator.asl_registry.keys())}. "
                     f"Add it to the asl_registry when constructing WorkflowRunner."
                 )
-            resp = orchestrator.run_sub_machine(sub_asl, input_data_to_machine, mock_mapping=mock_mapping, parent_path=new_parent_path)
+            resp = orchestrator.run_sub_machine(
+                sub_asl,
+                input_data_to_machine,
+                mock_mapping=mock_mapping,
+                parent_path=new_parent_path,
+            )
             result["Output"] = json.dumps(resp)
-            return {"mock": {"result": result["Output"], "fieldValidationMode": "PRESENT"}, "context": context}
+            return {
+                "mock": {"result": result["Output"], "fieldValidationMode": "PRESENT"},
+                "context": context,
+            }
 
         if state_type == "Parallel":
-            new_parent_path = f"{parent_path}/{state_name}" if parent_path else state_name
-            resp = [orchestrator.run_sub_machine(b, input_data, mock_mapping=mock_mapping, parent_path=new_parent_path) for b in
-                    state_def.get("Branches", [])]
+            new_parent_path = (
+                f"{parent_path}/{state_name}" if parent_path else state_name
+            )
+            resp = [
+                orchestrator.run_sub_machine(
+                    b,
+                    input_data,
+                    mock_mapping=mock_mapping,
+                    parent_path=new_parent_path,
+                )
+                for b in state_def.get("Branches", [])
+            ]
             return {"mock": {"result": json.dumps(resp)}, "context": context}
 
         if state_type == "Map":
-            items = input_data if isinstance(input_data, list) else input_data.get("items", [])
-            resp = [orchestrator.run_sub_machine(state_def["ItemProcessor"], item, mock_mapping=mock_mapping) for item
-                    in items]
+            items = (
+                input_data
+                if isinstance(input_data, list)
+                else input_data.get("items", [])
+            )
+            resp = [
+                orchestrator.run_sub_machine(
+                    state_def["ItemProcessor"], item, mock_mapping=mock_mapping
+                )
+                for item in items
+            ]
             return {"mock": {"result": json.dumps(resp)}, "context": context}
 
         return {}

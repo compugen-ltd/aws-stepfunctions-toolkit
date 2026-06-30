@@ -8,6 +8,7 @@ container).
 Set ROLE_ARN, then: uv run --python=3.13 --with aws-stepfunctions-toolkit python run_with_overrides.py
 Requires Docker running. AWS setup: ../../docs/setup.md
 """
+
 import json
 import os
 import tempfile
@@ -23,7 +24,9 @@ from aws_stepfunctions_toolkit import (
 )
 
 # >>> **EDIT THIS** <<< (or set the ROLE_ARN env var)
-ROLE_ARN = os.environ.get("ROLE_ARN", "arn:aws:iam::<account>:role/<role-with-test-state-perms>")
+ROLE_ARN = os.environ.get(
+    "ROLE_ARN", "arn:aws:iam::<account>:role/<role-with-test-state-perms>"
+)
 
 HERE = Path(__file__).parent
 PROJECT_FILE_DIR = HERE / "project_file"
@@ -46,18 +49,28 @@ mock_mapping = {
         s3_bucket="placeholder",
         image_source=DockerfileImage(context=str(PROJECT_FILE_DIR / "example_batch_1")),
         # To build via `docker buildx bake` instead, swap the image source:
-        #   image_source=BakeImage(bake_file=str(HERE / "docker-bake.hcl"),
-        #                          target="example_batch_1", base_dir=str(HERE)),
+        #   image_source=BakeImage(
+        #       bake_file=str(HERE / "docker-bake.hcl"),
+        #       target="example_batch_1",
+        #       base_dir=str(HERE),
+        #   ),
         volumes=volumes,
         variables=variables,
     ),
-    "example_batch_2": CallableStrategy(lambda input_data: {"result": "result"}),  # your own function
+    "example_batch_2": CallableStrategy(
+        lambda input_data: {"result": "result"}
+    ),  # your own function
     "example_lambda_1": StaticMockResponseStrategy(json.dumps({"result": "result"})),
-
     # --- per-SFN overrides: the child reuses the same names, so target it by path ---
-    "child_flow/example_batch_1": StaticMockResponseStrategy(json.dumps({"result": "child-batch-1"})),
-    "child_flow/example_batch_2": StaticMockResponseStrategy(json.dumps({"result": "child-batch-2"})),
-    "child_flow/example_lambda_1": StaticMockResponseStrategy(json.dumps({"result": "child-lambda"})),
+    "child_flow/example_batch_1": StaticMockResponseStrategy(
+        json.dumps({"result": "child-batch-1"})
+    ),
+    "child_flow/example_batch_2": StaticMockResponseStrategy(
+        json.dumps({"result": "child-batch-2"})
+    ),
+    "child_flow/example_lambda_1": StaticMockResponseStrategy(
+        json.dumps({"result": "child-lambda"})
+    ),
 }
 
 # child_flow is a startExecution.sync:2 step; registering the child machine here lets the

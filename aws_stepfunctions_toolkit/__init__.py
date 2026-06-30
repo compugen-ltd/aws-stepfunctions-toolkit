@@ -8,6 +8,7 @@ typically by building and running their container locally via Docker.
 
 Everything you need is importable from this top-level package.
 """
+
 from importlib.metadata import version, PackageNotFoundError
 
 # --- Engine + strategies + image sources + models ---

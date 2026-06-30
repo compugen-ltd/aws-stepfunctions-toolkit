@@ -52,13 +52,13 @@ class BatchJobInterface(ABC, Generic[InputT, OutputT]):
     output_model: type[OutputT]
 
     def __init__(
-            self,
-            logger: logging.Logger | None = None,
-            task_token_env_var: str = "TaskToken",
-            output_path_env_var: str = "OUTPUT_PATH",
-            test_mode_env_var: str = "ENVIRONMENT",
-            test_mode_values: tuple[str, ...] = ("dev", "test"),
-            region: str | None = None,
+        self,
+        logger: logging.Logger | None = None,
+        task_token_env_var: str = "TaskToken",
+        output_path_env_var: str = "OUTPUT_PATH",
+        test_mode_env_var: str = "ENVIRONMENT",
+        test_mode_values: tuple[str, ...] = ("dev", "test"),
+        region: str | None = None,
     ):
         self.logger = logger or logging.getLogger(__name__)
         self.task_token_env_var = task_token_env_var
@@ -99,7 +99,10 @@ class BatchJobInterface(ABC, Generic[InputT, OutputT]):
         if token:
             import boto3
             from aws_stepfunctions_toolkit.workflow_runner._common import resolve_region
-            client = boto3.client("stepfunctions", region_name=resolve_region(self.region))
+
+            client = boto3.client(
+                "stepfunctions", region_name=resolve_region(self.region)
+            )
             _ = client.send_task_success(taskToken=token, output=data)
         elif output_path := os.environ.get(self.output_path_env_var):
             Path(output_path).write_text(data)

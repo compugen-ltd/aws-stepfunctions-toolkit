@@ -6,6 +6,7 @@ container and capturing its output* (DockerBatchStrategy), so a plain Dockerfile
 or a prebuilt image is a first-class path and a Docker bake file is just one
 option among several. Users can implement their own ImageSource.
 """
+
 from __future__ import annotations
 
 import os
@@ -34,7 +35,9 @@ def login_to_ecr(region: str | None = None) -> str:
     return registry
 
 
-def get_codeartifact_token(domain: str, domain_owner: str, region: str | None = None) -> str:
+def get_codeartifact_token(
+    domain: str, domain_owner: str, region: str | None = None
+) -> str:
     """Fetch an AWS CodeArtifact authorization token (e.g. to inject into a Docker build)."""
     client = boto3.client("codeartifact", region_name=resolve_region(region))
     response = client.get_authorization_token(domain=domain, domainOwner=domain_owner)
@@ -73,10 +76,16 @@ class DockerfileImage(ImageSource):
     ``<context>/Dockerfile``. ``tag`` is auto-generated if not given.
     """
 
-    def __init__(self, context: str, dockerfile: str | None = None,
-                 build_args: dict | None = None, tag: str | None = None,
-                 target: str | None = None, region: str | None = None,
-                 login_ecr: bool = False):
+    def __init__(
+        self,
+        context: str,
+        dockerfile: str | None = None,
+        build_args: dict | None = None,
+        tag: str | None = None,
+        target: str | None = None,
+        region: str | None = None,
+        login_ecr: bool = False,
+    ):
         self.context = context
         self.dockerfile = dockerfile
         self.build_args = build_args or {}
@@ -108,11 +117,17 @@ class BakeImage(ImageSource):
     for private package installs during the build).
     """
 
-    def __init__(self, bake_file: str, target: str, tag: str | None = None,
-                 base_dir: str | None = None, bake_variables: dict | None = None,
-                 codeartifact_domain: str | None = None,
-                 codeartifact_domain_owner: str | None = None,
-                 region: str | None = None):
+    def __init__(
+        self,
+        bake_file: str,
+        target: str,
+        tag: str | None = None,
+        base_dir: str | None = None,
+        bake_variables: dict | None = None,
+        codeartifact_domain: str | None = None,
+        codeartifact_domain_owner: str | None = None,
+        region: str | None = None,
+    ):
         self.bake_file = bake_file
         self.target = target
         self.tag = tag or f"{target}:latest"

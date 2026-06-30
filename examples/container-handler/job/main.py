@@ -1,4 +1,5 @@
 """A job written with BatchJobInterface (see ../../docs/container-handler.md)."""
+
 import sys
 
 from pydantic import BaseModel

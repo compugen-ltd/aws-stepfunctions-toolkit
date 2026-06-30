@@ -1,4 +1,5 @@
 """The 'batch job': reads its input arg, writes result JSON to OUTPUT_PATH."""
+
 import json
 import os
 import sys
