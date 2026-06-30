@@ -171,7 +171,11 @@ Two layers, both run in parallel via pytest-xdist (`-n auto`):
 - **`tests/examples/`** — integration: runs each example end-to-end against the **real**
   `test_state` API. Marked `integration`/`docker`; **auto-skipped** unless `ROLE_ARN` is set
   (Docker examples skip without a Docker daemon; mock-generation/advanced-deployed skip unless
-  their env vars are present). Run with `make test-examples`.
+  their env vars are present). Run with `make test-examples`. A **completeness guard**
+  (`test_all_example_scripts_are_covered`) runs offline and fails if any `examples/*/run*.py`
+  isn't covered — so a new example can't silently go untested (add it to the `COVERED` set).
+- **Run them via** the `run-tests` skill or the `/run-tests` project command (both wrap
+  `make test` / `make test-examples`).
 - `runner.start` always hits AWS, so end-to-end behavior is only covered by the integration
   layer. Sanity after API/packaging changes:
   `uv run python -c "import aws_stepfunctions_toolkit as t; print(len(t.__all__))"` and a build.
