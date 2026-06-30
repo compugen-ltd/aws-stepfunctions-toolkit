@@ -23,6 +23,13 @@ end-to-end locally, with the Batch steps actually executing in local containers.
 
 ## The approach
 
+![Annotated Step Functions workflow showing how the toolkit runs each state type: test_state for engine logic, a strategy (e.g. local Docker) for .sync steps, and recursion for nested subflows](overview.svg)
+
+*The real Step Functions console graph of the [docker-batch](../examples/docker-batch/) example,
+annotated to show how each state is handled. Editable source:
+[`overview.drawio`](overview.drawio) (the console graph is embedded; edit the annotation layer in
+[draw.io](https://app.diagrams.net) and re-export `overview.svg`).*
+
 `WorkflowRunner` walks your real ASL definition state-by-state. For each state it:
 
 1. Picks a **strategy** that supplies the state's *result* (see
