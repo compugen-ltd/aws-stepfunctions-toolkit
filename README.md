@@ -20,6 +20,12 @@ plug in a **strategy** — typically by building and running that step's contain
 Docker**. The result: run an entire pipeline locally and swap any step between a mock, your own
 function, a local container, or a real AWS call.
 
+<p align="center">
+  <img src="docs/overview.svg" alt="Annotated Step Functions workflow showing how the toolkit runs each state type: test_state for engine logic, a strategy (e.g. local Docker) for .sync steps, and recursion for nested subflows" width="820">
+</p>
+
+<sub>The real console graph of the <a href="examples/docker-batch/">docker-batch</a> example, annotated to show how the toolkit handles each state.</sub>
+
 ## Install
 
 ```bash
