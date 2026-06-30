@@ -7,8 +7,23 @@
 useDefault = true
 
 [allowlist]
-description = "Permit the package's own author/contact identities"
+description = "Permit the package's own author identities and the known-safe placeholder account IDs"
 regexes = [
     '''roya@cgen\.com''',
     '''noreply@cgen\.com''',
+    # Fake/placeholder AWS account IDs intentionally used in models, examples and
+    # tests (rule #2 blesses 000000000000). These must stay numeric because they
+    # sit inside ARNs sent to the real test_state API.
+    '''0{12}''',
+    '''001111111111''',
 ]
+
+# Block any real-looking AWS account ID (12 digits) from being committed in
+# plaintext, WITHOUT naming the actual account ID anywhere (so this config is
+# itself safe to commit). The placeholders above are allowlisted; a real ID
+# like an org account number is not, so it gets flagged.
+[[rules]]
+id = "aws-account-id"
+description = "Possible AWS account ID (12 digits) in plaintext — use a placeholder instead"
+regex = '''\b\d{12}\b'''
+tags = ["aws", "account-id"]
