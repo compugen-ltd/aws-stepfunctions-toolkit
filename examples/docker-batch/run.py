@@ -2,6 +2,9 @@
 
 Set ROLE_ARN, then: uv run --python=3.13 --with aws-stepfunctions-toolkit python run.py
 Requires Docker running. AWS setup: ../../docs/setup.md
+
+The basic version — the nested `child_flow` step is mocked with a StaticMockResponseStrategy.
+See run_with_overrides.py to run the child machine for real with per-step hierarchical overrides.
 """
 import json
 import os
@@ -43,7 +46,7 @@ mock_mapping = {
     "example_batch_2": CallableStrategy(lambda input_data: {"result": "result"}),
     # A fixed Lambda payload:
     "example_lambda_1": StaticMockResponseStrategy(json.dumps({"result": "result"})),
-    # The nested-machine step (startExecution.sync:2) — mock its wrapper:
+    # The nested-machine step (startExecution.sync:2) — mock its whole wrapper:
     "child_flow": StaticMockResponseStrategy(json.dumps({
         "ExecutionArn": "ExecutionArn",
         "StartDate": "1234567890",
