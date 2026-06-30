@@ -4,6 +4,9 @@ These call the real `test_state` API, so they are auto-skipped unless ROLE_ARN i
 Docker examples additionally skip unless a Docker daemon is reachable; examples that need
 extra state (a real execution ARN, a deployed stack) skip unless that env is present.
 
+A completeness guard (test_all_example_scripts_are_covered) runs offline and fails if any
+example entry script isn't listed below — so new examples can't silently go untested.
+
 Run in parallel:  uv run pytest tests/examples -n auto
 """
 
@@ -16,6 +19,23 @@ from pathlib import Path
 import pytest
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
+
+# --- which scripts are tested, and how ---
+# Run with just ROLE_ARN (no Docker, no extra infra):
+SIMPLE = [
+    "quickstart/run.py",
+    "data-flow/run.py",
+    "sub-range/run.py",
+    "map-parallel/run.py",
+    "local-subprocess/run.py",
+    "container-handler/run.py",
+]
+# Need a Docker daemon (parametrized over both image sources):
+DOCKER = ["docker-batch/run.py", "docker-batch/run_with_overrides.py"]
+# Need extra state in the environment:
+ENV_GATED = ["mock-generation/run.py", "advanced-deployed/run.py"]
+
+COVERED = set(SIMPLE) | set(DOCKER) | set(ENV_GATED)
 
 requires_role = pytest.mark.skipif(
     not os.environ.get("ROLE_ARN"),
@@ -45,15 +65,15 @@ def _run(script: str, extra_env: dict | None = None) -> subprocess.CompletedProc
     )
 
 
-# Examples that run with just ROLE_ARN (no Docker, no extra infra).
-SIMPLE = [
-    "quickstart/run.py",
-    "data-flow/run.py",
-    "sub-range/run.py",
-    "map-parallel/run.py",
-    "local-subprocess/run.py",
-    "container-handler/run.py",
-]
+def test_all_example_scripts_are_covered():
+    """Offline guard: every examples/*/run*.py must be in COVERED (so it gets a test)."""
+    found = {
+        p.relative_to(EXAMPLES).as_posix() for p in EXAMPLES.glob("*/run*.py")
+    }
+    missing = found - COVERED
+    assert not missing, f"example scripts with no test: {sorted(missing)}"
+    stale = COVERED - found
+    assert not stale, f"COVERED lists scripts that no longer exist: {sorted(stale)}"
 
 
 @requires_role
@@ -69,9 +89,7 @@ def test_simple_example_runs(script):
 @requires_role
 @pytest.mark.integration
 @pytest.mark.docker
-@pytest.mark.parametrize(
-    "script", ["docker-batch/run.py", "docker-batch/run_with_overrides.py"]
-)
+@pytest.mark.parametrize("script", DOCKER)
 @pytest.mark.parametrize("image_source", ["dockerfile", "bake"])
 def test_docker_batch_example_runs(script, image_source):
     if not _docker_available():
