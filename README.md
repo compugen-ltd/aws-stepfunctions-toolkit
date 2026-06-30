@@ -6,8 +6,8 @@ each one runs.**
 This package was created out of the need to test a Step Functions pipeline built almost entirely
 from `batch:submitJob.sync` steps. AWS's
 [`test_state`](https://docs.aws.amazon.com/step-functions/latest/apireference/API_TestState.html)
-API can't run `.sync` integrations (or `.waitForTaskToken`), and deploying the real state machine
-to AWS to check each change was far too slow.
+API does not currently support `.sync` integrations or `.waitForTaskToken`, and deploying and
+running the state machine on AWS to validate each change made iterating impractical.
 
 So instead, this toolkit walks your real ASL definition state-by-state, uses `test_state` for the
 engine logic (Path/Parameters/ResultSelector/Output + next state), and lets you plug in a
