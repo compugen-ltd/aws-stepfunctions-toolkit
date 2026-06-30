@@ -9,11 +9,16 @@ entirely from `batch:submitJob.sync` steps. AWS's
 API does not currently support `.sync` integrations or `.waitForTaskToken`, and deploying and
 running the state machine on AWS to validate each change made iterating impractical.
 
-To address this, the toolkit walks your real ASL definition state by state, delegating the engine
-logic (Path/Parameters/ResultSelector/Output and next-state resolution) to `test_state` while
-letting you supply a **strategy** for the steps it cannot run — typically by building and running
-that step's container **locally with Docker**. This lets you run an entire pipeline locally and
-swap any step between a mock, your own function, a local container, or a real AWS call.
+AWS's docs suggest [chaining `test_state` calls](https://docs.aws.amazon.com/step-functions/latest/dg/test-state-isolation.html#iterating-through-state-machine-definitions)
+— feeding each state's output and next state into the next call — to exercise a complete execution
+path, but leave you to build that driver loop yourself. This toolkit packages that logic as a
+framework so you don't have to: it walks your real ASL definition state by state, delegates the
+engine logic (Path/Parameters/ResultSelector/Output and next-state resolution) to `test_state`,
+and handles the parts that aren't a linear chain — Map and Parallel fan-out, any-depth recursion,
+and nested subflows. For the steps `test_state` cannot run (`.sync`, `.waitForTaskToken`), you
+plug in a **strategy** — typically by building and running that step's container **locally with
+Docker**. The result: run an entire pipeline locally and swap any step between a mock, your own
+function, a local container, or a real AWS call.
 
 ## Install
 
