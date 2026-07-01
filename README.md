@@ -118,6 +118,9 @@ full local-cloud emulator:
   your own Python function, a subprocess, a static mock, or a real AWS call.
 - **Partial runs.** Because it drives the walk itself, it can start and stop at specific states, so
   you can re-run just part of a long pipeline.
+- **Real callbacks.** `.waitForTaskToken` steps — e.g. Batch jobs that return their result via the
+  task token — run for real, not only as a static mock. (LocalStack's Batch integration does not
+  support `.waitForTaskToken`.)
 
 On the existing options: AWS notes that [testing state machines with Step Functions Local is
 unsupported](https://docs.aws.amazon.com/step-functions/latest/dg/sfn-local.html) and points to the
