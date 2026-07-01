@@ -25,7 +25,7 @@ end-to-end locally, with the Batch steps actually executing in local containers.
 
 ![Annotated Step Functions workflow showing how the toolkit runs each state type: test_state for engine logic, a strategy (e.g. local Docker) for .sync steps, and recursion for nested subflows](overview.svg)
 
-*The real Step Functions console graph of the [docker-batch](../examples/docker-batch/) example,
+*The real Step Functions console graph of the [docker-batch](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/tree/master/examples/docker-batch) example,
 annotated to show how each state is handled. Editable source:
 [`overview.drawio`](overview.drawio) (the console graph is embedded; edit the annotation layer in
 [draw.io](https://app.diagrams.net) and re-export `overview.svg`).*
