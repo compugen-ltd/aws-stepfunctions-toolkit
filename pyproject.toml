@@ -5,7 +5,7 @@ authors = [
     { name = "Roy Assis", email = "roya@cgen.com" },
     { name = "Compugen", email = "noreply@cgen.com" },
 ]
-description = "POC for using AWS Step Functions test API for testing state machines locally using mock data"
+description = "Run AWS Step Functions state machines end-to-end locally, with per-step control over how each step runs."
 readme = "README.md"
 requires-python = "==3.13.*"
 classifiers = [
