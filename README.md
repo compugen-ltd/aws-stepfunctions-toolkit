@@ -103,6 +103,31 @@ Each links to docs with a code snippet, or to a runnable example.
 - **Container-side handler** (`BatchJobInterface`) for code inside your job containers. → [docs/container-handler.md](docs/container-handler.md#example)
 - **Mock generation** from a real execution, plus history inspection. → [docs/cli-and-history.md](docs/cli-and-history.md#generate-mocks-from-a-real-execution)
 
+## How this compares to existing tools
+
+The established way to run Step Functions locally is
+[LocalStack](https://docs.localstack.cloud/aws/services/stepfunctions/) (AWS's own
+[Step Functions Local](https://docs.aws.amazon.com/step-functions/latest/dg/sfn-local.html) is now
+unsupported, and AWS points to the `test_state` API instead). Two things set this toolkit apart:
+
+**No environment to stand up.** LocalStack is a whole-cloud emulator: to run your state machine you
+spin up a LocalStack environment and populate it with your stack — Lambdas, Batch job
+definitions/queues, ECS tasks, images, remapped ARNs. (Its Pro *AWS Replicator* can copy those from
+a live account, but it's a point-in-time sync into an environment you then run and maintain.) This
+toolkit needs no environment at all — it's a Python library that runs your real ASL directly against
+AWS's real `test_state` engine and executes each step locally via a strategy (e.g. your real
+container with Docker). Nothing to provision, replicate, or keep in sync.
+
+**Run just part of a pipeline.** You can start and/or stop at specific states to iterate on the
+middle of a long workflow. Step Functions — and therefore LocalStack — only run an execution from
+`StartAt` to a terminal state; there's no "begin at state X, end at state Y."
+
+**Tradeoff.** LocalStack is the far more comprehensive, mature platform — a full local AWS cloud
+spanning many services. This toolkit is deliberately narrow: it trades that breadth (and robustness)
+for a zero-setup, fast-iteration loop on a single Step Functions pipeline. Different tools for
+different jobs — reach for this when you want to iterate quickly on a real state machine without
+standing up an environment.
+
 ## Documentation
 
 Full documentation is hosted at **[aws-stepfunctions-toolkit.readthedocs.io](https://aws-stepfunctions-toolkit.readthedocs.io/en/stable/)**.
