@@ -3,6 +3,8 @@
 **Run a Step Functions state machine end-to-end on your laptop — and choose, per step, how
 each one runs.**
 
+[![Documentation Status](https://readthedocs.org/projects/aws-stepfunctions-toolkit/badge/?version=latest)](https://aws-stepfunctions-toolkit.readthedocs.io)
+
 The motivation to create this package was the need to test a Step Functions pipeline built almost
 entirely from `batch:submitJob.sync` steps. AWS's
 [`test_state`](https://docs.aws.amazon.com/step-functions/latest/apireference/API_TestState.html)
@@ -102,6 +104,8 @@ Each links to docs with a code snippet, or to a runnable example.
 - **Mock generation** from a real execution, plus history inspection. → [docs/cli-and-history.md](docs/cli-and-history.md#generate-mocks-from-a-real-execution)
 
 ## Documentation
+
+Full documentation is hosted at **[aws-stepfunctions-toolkit.readthedocs.io](https://aws-stepfunctions-toolkit.readthedocs.io)**.
 
 | Page | What's in it |
 |------|--------------|
