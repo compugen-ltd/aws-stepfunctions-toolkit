@@ -103,6 +103,31 @@ Each links to docs with a code snippet, or to a runnable example.
 - **Container-side handler** (`BatchJobInterface`) for code inside your job containers. → [docs/container-handler.md](docs/container-handler.md#example)
 - **Mock generation** from a real execution, plus history inspection. → [docs/cli-and-history.md](docs/cli-and-history.md#generate-mocks-from-a-real-execution)
 
+## How this compares to LocalStack
+
+The closest existing tool for running Step Functions locally is
+[LocalStack](https://docs.localstack.cloud/aws/services/stepfunctions/). (AWS's own
+[Step Functions Local](https://docs.aws.amazon.com/step-functions/latest/dg/sfn-local.html) is now
+**unsupported**, with no feature parity — AWS points to the `test_state` API instead.)
+
+The difference is the approach. LocalStack **emulates** Step Functions: it re-implements the
+interpreter and runs your states against emulated AWS services (or static JSON mock responses).
+This toolkit does **not** emulate anything:
+
+- **Real engine, not a re-implementation.** It drives AWS's real `test_state` API for each state's
+  data flow and transitions, so behavior matches production — there is no separate interpreter that
+  can drift from real Step Functions.
+- **Runs your real step, not emulated services.** Instead of emulated AWS services or fixed JSON
+  mock responses, you choose *per step* how it runs — a mock, your own Python function, a local
+  subprocess, the step's **real container via Docker**, or a real AWS call.
+- **A library you embed, not a service you run.** It's a Python package used from your test/script
+  code, so per-step behavior is arbitrary code rather than a static config file — and there is no
+  separate emulator process to stand up.
+
+Selective per-state mocking, Map/Parallel, and nested state machines are supported by both, so
+those aren't the distinction — the difference is **fidelity** (AWS's own engine) and **running your
+real step code locally**.
+
 ## Documentation
 
 Full documentation is hosted at **[aws-stepfunctions-toolkit.readthedocs.io](https://aws-stepfunctions-toolkit.readthedocs.io/en/stable/)**.
