@@ -105,9 +105,7 @@ Each links to docs with a code snippet, or to a runnable example.
 
 ## How this compares to existing tools
 
-Two options exist for running Step Functions locally: AWS
-[Step Functions Local](https://docs.aws.amazon.com/step-functions/latest/dg/sfn-local.html) (now
-unsupported — AWS points to the `test_state` API instead) and
+Two options exist for running Step Functions locally: AWS Step Functions Local and
 [LocalStack](https://docs.localstack.cloud/aws/services/stepfunctions/), a general-purpose local-AWS
 emulator.
 
@@ -121,8 +119,12 @@ full local-cloud emulator:
 - **Partial runs.** Because it drives the walk itself, it can start and stop at specific states, so
   you can re-run just part of a long pipeline.
 
-LocalStack is the more comprehensive platform and may be the better fit if you want a full local AWS
-environment; this is aimed narrowly at fast, low-setup iteration on a Step Functions pipeline.
+On the existing options: AWS notes that [testing state machines with Step Functions Local is
+unsupported](https://docs.aws.amazon.com/step-functions/latest/dg/sfn-local.html) and points to the
+`test_state` API instead. LocalStack looks great, and it may be the better fit if you want a full
+local AWS environment. We wanted the opposite for this use case: a **lightweight** solution we have
+**full control over** and can **customize** — purpose-built for fast, low-setup iteration on a Step
+Functions pipeline, not a general environment to run.
 
 ## Documentation
 
