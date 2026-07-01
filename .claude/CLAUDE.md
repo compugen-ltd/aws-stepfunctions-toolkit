@@ -91,11 +91,13 @@ aws_stepfunctions_toolkit/
 
 ## pre-commit & secret scanning
 
-This repo uses **pre-commit** (`.pre-commit-config.yaml`) — install the hooks once with
-`uv run pre-commit install`; they run on commit (and can be run on demand with
-`uv run pre-commit run --all-files`). Hooks include `detect-secrets`, `gitleaks`,
-`detect-private-key`, and the standard hygiene hooks (large-files, merge-conflict, yaml,
-end-of-file-fixer, trailing-whitespace).
+This repo uses **pre-commit** (`.pre-commit-config.yaml`). The git hook is **not** part of the
+checkout, so **every clone must run `uv run pre-commit install` once** before committing —
+without it the hooks silently do **not** run and commits bypass the secret scans (this bit us:
+early commits went in with no gitleaks check). Verify with `test -f .git/hooks/pre-commit`. Once
+installed they run on every commit (and on demand with `uv run pre-commit run --all-files`). Hooks
+include `detect-secrets`, `gitleaks`, `detect-private-key`, and the standard hygiene hooks
+(large-files, merge-conflict, yaml, end-of-file-fixer, trailing-whitespace).
 
 - `detect-secrets` runs against **`.secrets.baseline`**. Real secrets must never be committed;
   if `detect-secrets` flags a new finding, fix it (don't commit the secret). Only when a finding
