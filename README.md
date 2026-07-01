@@ -3,7 +3,7 @@
 **Run a Step Functions state machine end-to-end on your laptop — and choose, per step, how
 each one runs.**
 
-[![Documentation Status](https://readthedocs.org/projects/aws-stepfunctions-toolkit/badge/?version=latest)](https://aws-stepfunctions-toolkit.readthedocs.io)
+[![Documentation Status](https://readthedocs.org/projects/aws-stepfunctions-toolkit/badge/?version=stable)](https://aws-stepfunctions-toolkit.readthedocs.io/en/stable/)
 
 The motivation to create this package was the need to test a Step Functions pipeline built almost
 entirely from `batch:submitJob.sync` steps. AWS's
@@ -105,7 +105,7 @@ Each links to docs with a code snippet, or to a runnable example.
 
 ## Documentation
 
-Full documentation is hosted at **[aws-stepfunctions-toolkit.readthedocs.io](https://aws-stepfunctions-toolkit.readthedocs.io)**.
+Full documentation is hosted at **[aws-stepfunctions-toolkit.readthedocs.io](https://aws-stepfunctions-toolkit.readthedocs.io/en/stable/)**.
 
 | Page | What's in it |
 |------|--------------|
