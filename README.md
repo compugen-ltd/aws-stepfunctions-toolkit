@@ -103,7 +103,7 @@ Each links to docs with a code snippet, or to a runnable example.
 - **Container-side handler** (`BatchJobInterface`) for code inside your job containers. → [docs/container-handler.md](docs/container-handler.md#example)
 - **Mock generation** from a real execution, plus history inspection. → [docs/cli-and-history.md](docs/cli-and-history.md#generate-mocks-from-a-real-execution)
 
-## How this compares to LocalStack
+## How this compares to existing tools
 
 The closest existing tool for running Step Functions locally is
 [LocalStack](https://docs.localstack.cloud/aws/services/stepfunctions/). (AWS's own
