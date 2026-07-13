@@ -47,9 +47,10 @@ Verify:
 aws sts get-caller-identity
 ```
 
-## 2. A role for `test_state` (the `role_arn` you pass)
+## 2. A role for `test_state` (the `ROLE_ARN` you pass per machine)
 
-`test_state` runs each state under an IAM **execution role** that you pass as `role_arn`. You need:
+`test_state` runs each state under an IAM **execution role** that you supply on each `asl_registry`
+entry as its `ROLE_ARN`. You need:
 
 - **The role itself**, trusted by Step Functions.
 - **Permission for your caller** to call `states:TestState` and to `iam:PassRole` that role.
@@ -103,7 +104,7 @@ Attach to the **user/role whose credentials you run with** (from step 1):
 }
 ```
 
-Now set `role_arn` to that role ARN (the only value the [quickstart](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/blob/master/examples/quickstart/run.py)
+Now set the main machine's `ROLE_ARN` to that role ARN (the only value the [quickstart](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/blob/master/examples/quickstart/run.py)
 asks you to edit).
 
 ## 3. Docker (only for container strategies)

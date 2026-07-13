@@ -29,10 +29,11 @@ class WorkflowRunner:
             "$parse($states.result.Output)",
         ),
     }
+    #: Key on each ``asl_registry`` entry carrying that state machine's execution role.
+    ROLE_ARN_KEY: Final[str] = "ROLE_ARN"
 
     def __init__(
         self,
-        role_arn: str,
         asl_registry: Mapping[str, AslDefinitionDict],
         mock_mapping: Mapping[str, StateExecutionStrategy],
         variables: dict | None = None,
@@ -42,7 +43,6 @@ class WorkflowRunner:
         self.client: SFNClient = boto3.client(
             "stepfunctions", region_name=resolve_region(region)
         )
-        self.role_arn = role_arn
         self.default_strategy = StandardFlowStrategy()
         self.variables = variables or dict()
         self.mock_mapping = mock_mapping
@@ -53,7 +53,28 @@ class WorkflowRunner:
                 AslDefinition.model_validate(definition)
             except ValidationError as e:
                 raise RuntimeError(f"Invalid ASL definition '{name}':\n{e}") from e
+            if not definition.get(self.ROLE_ARN_KEY):
+                raise RuntimeError(
+                    f"ASL registry entry '{name}' is missing a '{self.ROLE_ARN_KEY}'. "
+                    f"Each state machine carries its own execution role, e.g.\n"
+                    f"    asl_registry={{'{name}': {{**definition, "
+                    f"'{self.ROLE_ARN_KEY}': 'arn:aws:iam::<account>:role/<sfn-role>'}}}}"
+                )
         self.asl_registry = asl_registry
+        # The execution role of the state machine currently running. Set to the main SM's
+        # role in start(), switched to a sub-machine's role as execution crosses a nested
+        # startExecution boundary (then restored). Empty until start() runs.
+        self.active_role_arn: str = ""
+
+    def role_for(self, asl_def: Mapping) -> str:
+        """Return the execution role ARN carried on an ``asl_registry`` entry."""
+        role = asl_def.get(self.ROLE_ARN_KEY)
+        if not role:
+            raise RuntimeError(
+                f"ASL definition has no '{self.ROLE_ARN_KEY}'. Every state machine in "
+                f"the registry must carry its own execution role."
+            )
+        return role
 
     def has_token(self, state_def: dict) -> bool:
         return (
@@ -167,7 +188,7 @@ class WorkflowRunner:
             # Let AWS handle the logic (Path, Parameters, ResultSelector)
             response = self.client.test_state(
                 definition=json.dumps(self.alter_mock_step(current_state, state_def)),
-                roleArn=self.role_arn,
+                roleArn=self.active_role_arn,
                 variables=json.dumps(self.variables),
                 input=json.dumps(data),
                 **raw_result,
@@ -273,6 +294,7 @@ class WorkflowRunner:
         self._validate_start(initial_input, self.mock_mapping)
 
         main_definition = self.asl_registry["main"]
+        self.active_role_arn = self.role_for(main_definition)
         return self.run_sub_machine(
             main_definition, initial_input, self.mock_mapping, start, end, parent_path
         )

@@ -6,6 +6,8 @@ from .strategies import (
     DockerBatchStrategy,
     BatchImageStrategy,
     LocalBatchImageStrategy,
+    DockerLambdaStrategy,
+    LocalLambdaImageStrategy,
     LocalExecutionStrategy,
     CallableStrategy,
     StaticMockResponseStrategy,
@@ -15,6 +17,7 @@ from .strategies import (
     StandardFlowStrategy,
     build_strategies,
     get_container_overrides,
+    get_lambda_payload,
 )
 from .image_sources import (
     ImageSource,
@@ -38,6 +41,8 @@ __all__ = [
     "DockerBatchStrategy",
     "BatchImageStrategy",
     "LocalBatchImageStrategy",
+    "DockerLambdaStrategy",
+    "LocalLambdaImageStrategy",
     "LocalExecutionStrategy",
     "CallableStrategy",
     "StaticMockResponseStrategy",
@@ -47,6 +52,7 @@ __all__ = [
     "StandardFlowStrategy",
     "build_strategies",
     "get_container_overrides",
+    "get_lambda_payload",
     "ImageSource",
     "PrebuiltImage",
     "DockerfileImage",

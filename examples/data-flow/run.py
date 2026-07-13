@@ -23,7 +23,8 @@ mock_mapping = {
 }
 
 runner = WorkflowRunner(
-    role_arn=ROLE_ARN, asl_registry={"main": definition}, mock_mapping=mock_mapping
+    asl_registry={"main": {**definition, "ROLE_ARN": ROLE_ARN}},
+    mock_mapping=mock_mapping,
 )
 print(
     json.dumps(runner.start(initial_input={"order_id": 123, "amount": 100}), indent=2)

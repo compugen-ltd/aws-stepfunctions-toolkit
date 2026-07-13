@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Json
 
@@ -82,6 +82,11 @@ class AslDefinition(BaseModel):
 class AslDefinitionDict(TypedDict):
     StartAt: str
     States: dict[str, dict]
+    # Each registry entry carries its own execution role (the role its states run under
+    # via test_state). Optional at the type level because inline sub-definitions
+    # (a Map ItemProcessor / Parallel branch) are AslDefinitionDict-shaped but run under
+    # their parent SM's role; WorkflowRunner enforces it for top-level registry entries.
+    ROLE_ARN: NotRequired[str]
 
 
 # --- Docker Batch Config ---

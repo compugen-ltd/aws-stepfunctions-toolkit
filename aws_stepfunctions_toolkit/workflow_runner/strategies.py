@@ -3,10 +3,14 @@ from __future__ import annotations
 import os
 import logging
 import json
+import socket
+import time
 import uuid
 import shutil
 import subprocess
 import tempfile
+import urllib.error
+import urllib.request
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Callable, TYPE_CHECKING
@@ -22,7 +26,12 @@ if TYPE_CHECKING:
     from .workflow_runner import WorkflowRunner
 
 from ._common import TestStateInputTypeDefSlim, resolve_region
-from .image_sources import ImageSource, BakeImage, login_to_ecr, get_codeartifact_token  # noqa: F401  (re-exported)
+from .image_sources import (
+    ImageSource,
+    BakeImage,
+    login_to_ecr,  # noqa: F401  (re-exported)
+    get_codeartifact_token,  # noqa: F401  (re-exported)
+)
 from .models import DockerBatchConfig, StartExecutionResult
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
@@ -59,6 +68,45 @@ def get_container_overrides(
             f"inspectionData keys: {list(inspection.keys())}"
         )
     return json.loads(after_args)["ContainerOverrides"]
+
+
+def get_lambda_payload(
+    sfn_client,
+    state_def: dict,
+    role_arn: str,
+    variables: dict,
+    input_data: dict,
+    context: str | None,
+) -> dict:
+    """Use the test API to resolve a ``lambda:invoke`` state's ``Payload`` (the event).
+
+    Runs ``test_state`` in TRACE mode with an empty mock so AWS evaluates the state's
+    Arguments, then returns the resolved ``Payload`` — exactly the event Step Functions
+    would pass to the Lambda handler.
+    """
+    response = sfn_client.test_state(
+        definition=json.dumps(state_def),
+        roleArn=role_arn,
+        variables=json.dumps(variables),
+        input=json.dumps(input_data),
+        inspectionLevel="TRACE",
+        context=context,
+        mock={"result": json.dumps({}), "fieldValidationMode": "PRESENT"},
+    )
+    inspection = response.get("inspectionData", {})
+    after_args = inspection.get("afterArguments")
+    if not after_args:
+        raise RuntimeError(
+            f"test_state did not return afterArguments. "
+            f"inspectionData keys: {list(inspection.keys())}"
+        )
+    arguments = json.loads(after_args)
+    if "Payload" not in arguments:
+        raise RuntimeError(
+            f"lambda:invoke Arguments has no 'Payload' (got keys {list(arguments.keys())}). "
+            f"A lambda:invoke state must set Arguments.Payload to the event to send."
+        )
+    return arguments["Payload"]
 
 
 # --- 1. Execution Strategy Interface ---
@@ -154,7 +202,7 @@ class DockerBatchStrategy(StateExecutionStrategy):
         overrides = get_container_overrides(
             orchestrator.client,
             state_def,
-            orchestrator.role_arn,
+            orchestrator.active_role_arn,
             self.variables,
             input_data,
             context,
@@ -171,6 +219,150 @@ class DockerBatchStrategy(StateExecutionStrategy):
 
 BatchImageStrategy = DockerBatchStrategy
 LocalBatchImageStrategy = DockerBatchStrategy
+
+
+# --- 1a. Implementation: Local Lambda container image via the Runtime Interface Emulator ---
+# AWS Lambda base images ship the Runtime Interface Emulator (RIE), which exposes this HTTP
+# endpoint on container port 8080. POSTing the event runs the real handler locally.
+RIE_CONTAINER_PORT: int = 8080
+RIE_INVOCATION_PATH: str = "/2015-03-31/functions/function/invocations"
+
+
+class DockerLambdaStrategy(StateExecutionStrategy):
+    """Runs a real AWS Lambda **container image** locally via the Runtime Interface Emulator.
+
+    This is the Lambda counterpart to ``DockerBatchStrategy``: instead of faking a
+    ``lambda:invoke`` step with a hand-written mock, it runs the Lambda's real image and
+    returns the handler's real output. The image is produced by a pluggable ``ImageSource``
+    (``DockerfileImage`` / ``PrebuiltImage`` / ``BakeImage`` / your own).
+
+    AWS Lambda base images (``public.ecr.aws/lambda/python:*`` etc.) include the Runtime
+    Interface Emulator (RIE), which serves ``POST /2015-03-31/functions/function/invocations``.
+    This strategy resolves the event ``Payload`` the state would pass (via the test API), runs
+    the image detached with the RIE port published, ``POST``\\ s the event, then returns the
+    handler response wrapped as the Step Functions ``lambda:invoke`` result shape
+    (``{"Payload": <json-string>}``) so downstream ``$states.result.Payload`` expressions
+    resolve (the runner rewrites that to ``$parse(...)`` for mocked lambda steps).
+
+        DockerLambdaStrategy(image_source=DockerfileImage(context="jobs/my_lambda"))
+    """
+
+    DEFAULT_STARTUP_TIMEOUT: float = 30.0
+
+    def __init__(
+        self,
+        image_source: ImageSource,
+        variables: dict | None = None,
+        extra_run_envs: dict | None = None,
+        forward_aws_envs: bool = True,
+        startup_timeout: float = DEFAULT_STARTUP_TIMEOUT,
+        region: str | None = None,
+    ):
+        if not isinstance(image_source, ImageSource):
+            raise TypeError(
+                "image_source must be an ImageSource (e.g. DockerfileImage, PrebuiltImage, BakeImage)"
+            )
+        self.image_source = image_source
+        self.variables = variables or dict()
+        self.extra_run_envs = extra_run_envs or {}
+        self.forward_aws_envs = forward_aws_envs
+        self.startup_timeout = startup_timeout
+        self.region = region
+
+    def _aws_envs(self) -> dict:
+        """AWS_* env forwarded into the container so the handler's AWS calls work."""
+        if not self.forward_aws_envs:
+            return {}
+        envs = {k: v for k, v in os.environ.items() if k.startswith("AWS_")}
+        region = resolve_region(self.region)
+        if region:
+            envs.setdefault("AWS_REGION", region)
+            envs.setdefault("AWS_DEFAULT_REGION", region)
+        return envs
+
+    @staticmethod
+    def _free_port() -> int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(("", 0))
+            return sock.getsockname()[1]
+
+    def _post_event(self, url: str, payload: dict) -> dict:
+        """POST the event to the RIE, retrying until the emulator is up or we time out."""
+        data = json.dumps(payload).encode("utf-8")
+        deadline = time.monotonic() + self.startup_timeout
+        last_err: Exception | None = None
+        while time.monotonic() < deadline:
+            try:
+                request = urllib.request.Request(
+                    url,
+                    data=data,
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(
+                    request, timeout=self.startup_timeout
+                ) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+            except (urllib.error.URLError, ConnectionError, OSError) as e:
+                last_err = e
+                time.sleep(0.5)
+        raise RuntimeError(
+            f"Lambda RIE at {url} did not respond within {self.startup_timeout}s: {last_err}"
+        )
+
+    def _invoke_via_rie(self, run_image: str, payload: dict, extra_envs: dict) -> dict:
+        host_port = self._free_port()
+        envs = self._aws_envs() | self.extra_run_envs | extra_envs
+        envs.pop("TaskToken", None)
+        container = docker.run(
+            run_image,
+            detach=True,
+            remove=True,
+            publish=[(host_port, RIE_CONTAINER_PORT)],
+            envs=envs,
+        )
+        try:
+            url = f"http://localhost:{host_port}{RIE_INVOCATION_PATH}"
+            return self._post_event(url, payload)
+        finally:
+            try:
+                docker.stop(container)
+            except Exception:  # container may already be gone (--rm)
+                logger.debug(
+                    "failed to stop RIE container (already removed?)", exc_info=True
+                )
+
+    def execute(
+        self,
+        state_name,
+        state_def,
+        input_data,
+        orchestrator,
+        context=None,
+        parent_path="",
+    ):
+        payload = get_lambda_payload(
+            orchestrator.client,
+            state_def,
+            orchestrator.active_role_arn,
+            self.variables,
+            input_data,
+            context,
+        )
+        run_image = self.image_source.ensure_image()
+        response = self._invoke_via_rie(run_image, payload, {})
+        # Wrap as the lambda:invoke result shape. Payload is a JSON *string* (test_state
+        # requires it); alter_mock_step rewrites the state's $states.result.Payload to
+        # $parse($states.result.Payload) so downstream reads get the handler's object back.
+        result = {
+            "ExecutedVersion": "$LATEST",
+            "Payload": json.dumps(response),
+            "StatusCode": 200,
+        }
+        return {"mock": {"result": json.dumps(result)}, "context": context}
+
+
+LocalLambdaImageStrategy = DockerLambdaStrategy
 
 
 # --- 1b. Implementation: Local subprocess (no Docker) ---
@@ -244,7 +436,7 @@ class LocalExecutionStrategy(StateExecutionStrategy):
         overrides = get_container_overrides(
             orchestrator.client,
             state_def,
-            orchestrator.role_arn,
+            orchestrator.active_role_arn,
             self.variables,
             input_data,
             context,
@@ -381,7 +573,7 @@ class BatchJobResponseStrategy(StateExecutionStrategy):
         container_overrides = get_container_overrides(
             orchestrator.client,
             state_def,
-            orchestrator.role_arn,
+            orchestrator.active_role_arn,
             self.variables,
             input_data,
             context,
@@ -428,7 +620,7 @@ class AbstractMockMapResponseStrategy(StateExecutionStrategy, ABC):
         items = self.get_items(input_data)
         response = orchestrator.client.test_state(
             definition=json.dumps(state_def),
-            roleArn=orchestrator.role_arn,
+            roleArn=orchestrator.active_role_arn,
             inspectionLevel="TRACE",
             variables=json.dumps(orchestrator.variables),
             input=json.dumps(input_data),
@@ -479,7 +671,7 @@ class StandardFlowStrategy(StateExecutionStrategy):
             result = StartExecutionResult(Input=json.dumps(input_data)).model_dump()
             response = orchestrator.client.test_state(
                 definition=json.dumps(state_def),
-                roleArn=orchestrator.role_arn,
+                roleArn=orchestrator.active_role_arn,
                 inspectionLevel="TRACE",
                 variables=json.dumps(orchestrator.variables),
                 input=json.dumps(input_data),
@@ -503,12 +695,19 @@ class StandardFlowStrategy(StateExecutionStrategy):
                     f"Available: {list(orchestrator.asl_registry.keys())}. "
                     f"Add it to the asl_registry when constructing WorkflowRunner."
                 )
-            resp = orchestrator.run_sub_machine(
-                sub_asl,
-                input_data_to_machine,
-                mock_mapping=mock_mapping,
-                parent_path=new_parent_path,
-            )
+            # Cross an SM boundary: the sub-machine runs under its own execution role.
+            # Switch the active role for the recursion, then restore the parent's role.
+            previous_role = orchestrator.active_role_arn
+            orchestrator.active_role_arn = orchestrator.role_for(sub_asl)
+            try:
+                resp = orchestrator.run_sub_machine(
+                    sub_asl,
+                    input_data_to_machine,
+                    mock_mapping=mock_mapping,
+                    parent_path=new_parent_path,
+                )
+            finally:
+                orchestrator.active_role_arn = previous_role
             result["Output"] = json.dumps(resp)
             # Return the full startExecution wrapper (with Output as a JSON string) so the
             # parent state's `$states.result.Output` reads the child's output.
