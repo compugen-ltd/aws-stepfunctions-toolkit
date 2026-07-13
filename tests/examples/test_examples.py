@@ -81,9 +81,9 @@ def test_all_example_scripts_are_covered():
 @pytest.mark.parametrize("script", SIMPLE, ids=[s.split("/")[0] for s in SIMPLE])
 def test_simple_example_runs(script):
     p = _run(script)
-    assert (
-        p.returncode == 0
-    ), f"{script} failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    assert p.returncode == 0, (
+        f"{script} failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
 
 
 @requires_role
@@ -95,9 +95,9 @@ def test_docker_batch_example_runs(script, image_source):
     if not _docker_available():
         pytest.skip("Docker not available")
     p = _run(script, {"IMAGE_SOURCE": image_source})
-    assert (
-        p.returncode == 0
-    ), f"{script} ({image_source}) failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    assert p.returncode == 0, (
+        f"{script} ({image_source}) failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
 
 
 @requires_role
@@ -108,9 +108,9 @@ def test_docker_single_example_runs(script):
     if not _docker_available():
         pytest.skip("Docker not available")
     p = _run(script)
-    assert (
-        p.returncode == 0
-    ), f"{script} failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    assert p.returncode == 0, (
+        f"{script} failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
 
 
 @pytest.mark.integration
@@ -119,9 +119,9 @@ def test_docker_single_example_runs(script):
 )
 def test_mock_generation_example_runs():
     p = _run("mock-generation/run.py")
-    assert (
-        p.returncode == 0
-    ), f"mock-generation failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    assert p.returncode == 0, (
+        f"mock-generation failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
 
 
 @pytest.mark.integration
@@ -133,6 +133,6 @@ def test_mock_generation_example_runs():
 )
 def test_advanced_deployed_example_runs():
     p = _run("advanced-deployed/run.py")
-    assert (
-        p.returncode == 0
-    ), f"advanced-deployed failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    assert p.returncode == 0, (
+        f"advanced-deployed failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
