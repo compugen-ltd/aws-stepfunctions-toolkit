@@ -42,8 +42,10 @@ mock_mapping = {
 }
 
 runner = WorkflowRunner(
-    role_arn="arn:aws:iam::<account>:role/<role-with-test-state-perms>",
-    asl_registry={"main": definition},
+    # Each state machine carries its own execution role (the role its states run under).
+    asl_registry={
+        "main": {**definition, "ROLE_ARN": "arn:aws:iam::<account>:role/<role-with-test-state-perms>"},
+    },
     mock_mapping=mock_mapping,
 )
 

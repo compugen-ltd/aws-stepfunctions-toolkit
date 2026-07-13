@@ -19,7 +19,7 @@ HERE = Path(__file__).parent
 definition = json.loads((HERE / "state_machine.asl.json").read_text())
 
 runner = WorkflowRunner(
-    role_arn=ROLE_ARN, asl_registry={"main": definition}, mock_mapping={}
+    asl_registry={"main": {**definition, "ROLE_ARN": ROLE_ARN}}, mock_mapping={}
 )
 
 # The Map fans out over a list input (one ItemProcessor run per item).

@@ -15,10 +15,16 @@ ROLE = "arn:aws:iam::000000000000:role/dummy"
 MAIN = {"StartAt": "A", "States": {"A": {"Type": "Pass", "End": True}}}
 
 
+def _with_roles(registry, role=ROLE):
+    """Stamp a ROLE_ARN on every registry entry (each SM carries its own role)."""
+    return {
+        name: {**definition, "ROLE_ARN": role} for name, definition in registry.items()
+    }
+
+
 def _runner(asl=None, mock_mapping=None):
     return WorkflowRunner(
-        role_arn=ROLE,
-        asl_registry=asl or {"main": MAIN},
+        asl_registry=_with_roles(asl or {"main": MAIN}),
         mock_mapping=mock_mapping or {},
         region="us-east-1",
     )
@@ -128,8 +134,84 @@ def test_collect_all_state_names_recurses_map_and_parallel():
 def test_validate_start_requires_main():
     with pytest.raises(RuntimeError):
         WorkflowRunner(
-            role_arn=ROLE,
-            asl_registry={"notmain": MAIN},
+            asl_registry=_with_roles({"notmain": MAIN}),
             mock_mapping={},
             region="us-east-1",
         ).start({})
+
+
+def test_missing_role_arn_is_rejected_at_construction():
+    with pytest.raises(RuntimeError, match="ROLE_ARN"):
+        WorkflowRunner(
+            asl_registry={"main": MAIN},  # no ROLE_ARN
+            mock_mapping={},
+            region="us-east-1",
+        )
+
+
+def test_role_for_returns_entry_role():
+    r = _runner()
+    assert r.role_for(r.asl_registry["main"]) == ROLE
+    with pytest.raises(RuntimeError, match="ROLE_ARN"):
+        r.role_for({"StartAt": "A", "States": {}})
+
+
+class _FakeSFN:
+    """Records the roleArn each test_state call runs under, driving a 2-SM flow."""
+
+    def __init__(self):
+        self.calls = []  # {"resource", "roleArn", "trace"}
+
+    def test_state(self, **kw):
+        resource = json.loads(kw["definition"]).get("Resource", "")
+        trace = kw.get("inspectionLevel")
+        self.calls.append(
+            {"resource": resource, "roleArn": kw["roleArn"], "trace": trace}
+        )
+        if trace == "TRACE":
+            # startExecution.sync:2 TRACE inspection: echo the input as the child's Input.
+            return {
+                "status": "SUCCEEDED",
+                "inspectionData": {
+                    "afterArguments": json.dumps({"Input": json.loads(kw["input"])})
+                },
+            }
+        # A normal state execution: echo input as output, no next state.
+        return {"status": "SUCCEEDED", "output": kw["input"], "nextState": None}
+
+
+def test_active_role_switches_across_nested_state_machine_boundary():
+    parent_role = "arn:aws:iam::000000000000:role/parent"
+    child_role = "arn:aws:iam::000000000000:role/child"
+    main = {
+        "StartAt": "child_flow",
+        "States": {
+            "child_flow": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                "End": True,
+            }
+        },
+    }
+    child = {"StartAt": "C", "States": {"C": {"Type": "Pass", "End": True}}}
+
+    runner = WorkflowRunner(
+        asl_registry={
+            "main": {**main, "ROLE_ARN": parent_role},
+            "child_flow": {**child, "ROLE_ARN": child_role},
+        },
+        mock_mapping={},
+        region="us-east-1",
+    )
+    fake = _FakeSFN()
+    runner.client = fake
+    runner.start({"n": 1})
+
+    # The child SM's own state (Pass "C", no Resource) ran under the child role...
+    child_calls = [c for c in fake.calls if c["resource"] == ""]
+    assert child_calls and all(c["roleArn"] == child_role for c in child_calls)
+    # ...and the parent's startExecution state ran under the parent role.
+    parent_calls = [c for c in fake.calls if "startExecution" in c["resource"]]
+    assert parent_calls and all(c["roleArn"] == parent_role for c in parent_calls)
+    # Active role is restored to the parent after the nested run.
+    assert runner.active_role_arn == parent_role

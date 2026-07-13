@@ -27,6 +27,10 @@ from aws_stepfunctions_toolkit import (
 ROLE_ARN = os.environ.get(
     "ROLE_ARN", "arn:aws:iam::<account>:role/<role-with-test-state-perms>"
 )
+# In real AWS each state machine has its OWN execution role. The child machine can run
+# under a narrower role than the parent (set CHILD_ROLE_ARN to exercise that); it
+# defaults to the same role here so the example runs with a single configured role.
+CHILD_ROLE_ARN = os.environ.get("CHILD_ROLE_ARN", ROLE_ARN)
 
 HERE = Path(__file__).parent
 PROJECT_FILE_DIR = HERE / "project_file"
@@ -80,8 +84,10 @@ mock_mapping = {
 # child_flow is a startExecution.sync:2 step; registering the child machine here lets the
 # default StandardFlowStrategy recurse into it (rather than mocking the whole sub-run).
 runner = WorkflowRunner(
-    role_arn=ROLE_ARN,
-    asl_registry={"main": main_definition, "child_flow": child_definition},
+    asl_registry={
+        "main": {**main_definition, "ROLE_ARN": ROLE_ARN},
+        "child_flow": {**child_definition, "ROLE_ARN": CHILD_ROLE_ARN},
+    },
     variables=variables,
     mock_mapping=mock_mapping,
 )

@@ -17,6 +17,7 @@ and you can change a step's means without touching the ASL.
 | `CallableStrategy(handler)` | Your Python function, in-process | Compute a result from the input without a container. |
 | `LocalExecutionStrategy(entrypoint, ...)` | A **local subprocess** (no Docker) | Run the step's code directly in your terminal. |
 | `DockerBatchStrategy(s3_bucket, image_source, ...)` | A **local Docker container** | Actually run a Batch/`.sync` step's image on your machine. |
+| `DockerLambdaStrategy(image_source, ...)` | A **local Lambda container** (via the RIE) | Actually run a `lambda:invoke` step's real image and assert on its real output. |
 | `BatchJobResponseStrategy(job_queue, job_definition, ...)` | A **real AWS Batch** submission | Exercise the step remotely in AWS. |
 | `GetLatestConfigurationStrategy(application, environment, configuration_profile)` | A **real AWS AppConfig** fetch | The step reads live AppConfig. |
 | `AbstractMockMapResponseStrategy` (subclass) | Custom Map item selection | A Map state's items come from a non-obvious place in the input. |
@@ -89,6 +90,30 @@ JSON to `/tmp/output.json`; the toolkit mounts a writable temp dir at `/tmp` and
 `OUTPUT_PATH` and `S3_OUTPUT_PATH`. See [Container-side handler](container-handler.md) for the
 in-container contract and `BatchJobInterface`.
 
+### Run a Lambda container image via RIE
+
+```python
+from aws_stepfunctions_toolkit import DockerLambdaStrategy, DockerfileImage
+
+DockerLambdaStrategy(
+    image_source=DockerfileImage(context="./jobs/my_lambda"),
+    extra_run_envs={"LOG_LEVEL": "DEBUG"},   # optional extra container env
+    forward_aws_envs=True,                   # forward AWS_* so the handler's AWS calls work (default)
+    startup_timeout=30.0,                    # seconds to wait for the RIE to answer (default)
+)
+```
+
+The Lambda counterpart to `DockerBatchStrategy`: instead of faking a `lambda:invoke` step with a
+mock, it runs the Lambda's **real image** and returns the handler's real output. AWS Lambda base
+images (`public.ecr.aws/lambda/python:*`, etc.) ship the **Runtime Interface Emulator** (RIE),
+which serves `POST /2015-03-31/functions/function/invocations`. The strategy resolves the event
+`Payload` the state would pass (via `test_state`), runs the image detached with the RIE port
+published, `POST`s the event, and returns the handler response wrapped as the Step Functions
+`lambda:invoke` result shape (`{"Payload": <json-string>}`) — so your ASL's real
+`$states.result.Payload` expression resolves (the runner rewrites it to `$parse(...)` for the
+mocked step). Uses the same [image sources](#image-sources) as `DockerBatchStrategy`. See the
+[`docker-lambda` example](https://github.com/compugen-ltd/aws-stepfunctions-toolkit/blob/master/examples/docker-lambda/run.py).
+
 ### Submit a real AWS Batch job
 
 ```python
@@ -102,8 +127,8 @@ BatchJobResponseStrategy(
 
 ## Image sources
 
-`DockerBatchStrategy` gets its image from a pluggable `ImageSource`. **A bake file is not
-required** — a plain Dockerfile is the easy default.
+`DockerBatchStrategy` and `DockerLambdaStrategy` get their image from a pluggable `ImageSource`.
+**A bake file is not required** — a plain Dockerfile is the easy default.
 
 | Image source | Build/obtain by |
 |--------------|-----------------|

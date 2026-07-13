@@ -32,10 +32,12 @@ SIMPLE = [
 ]
 # Need a Docker daemon (parametrized over both image sources):
 DOCKER = ["docker-batch/run.py", "docker-batch/run_with_overrides.py"]
+# Need a Docker daemon (single run, no image-source parametrization):
+DOCKER_SINGLE = ["docker-lambda/run.py"]
 # Need extra state in the environment:
 ENV_GATED = ["mock-generation/run.py", "advanced-deployed/run.py"]
 
-COVERED = set(SIMPLE) | set(DOCKER) | set(ENV_GATED)
+COVERED = set(SIMPLE) | set(DOCKER) | set(DOCKER_SINGLE) | set(ENV_GATED)
 
 requires_role = pytest.mark.skipif(
     not os.environ.get("ROLE_ARN"),
@@ -95,6 +97,19 @@ def test_docker_batch_example_runs(script, image_source):
     p = _run(script, {"IMAGE_SOURCE": image_source})
     assert p.returncode == 0, (
         f"{script} ({image_source}) failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
+    )
+
+
+@requires_role
+@pytest.mark.integration
+@pytest.mark.docker
+@pytest.mark.parametrize("script", DOCKER_SINGLE)
+def test_docker_single_example_runs(script):
+    if not _docker_available():
+        pytest.skip("Docker not available")
+    p = _run(script)
+    assert p.returncode == 0, (
+        f"{script} failed:\nSTDOUT:\n{p.stdout}\nSTDERR:\n{p.stderr}"
     )
 
 

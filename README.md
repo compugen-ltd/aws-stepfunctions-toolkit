@@ -64,8 +64,11 @@ mock_mapping = {
 }
 
 runner = WorkflowRunner(
-    role_arn="arn:aws:iam::<account>:role/<role-with-test-state-perms>",  # the only value you must set; needs AWS creds + a region in your environment
-    asl_registry={"main": definition},
+    # Each state machine carries its own execution role (the role its states run under);
+    # this is the only value you must set — needs AWS creds + a region in your environment.
+    asl_registry={
+        "main": {**definition, "ROLE_ARN": "arn:aws:iam::<account>:role/<role-with-test-state-perms>"},
+    },
     mock_mapping=mock_mapping,
 )
 
@@ -86,7 +89,9 @@ see [Control flow](docs/control-flow.md#subflows-nested-state-machines).
 States **without** an entry in `mock_mapping` are handled automatically (`test_state` for
 ordinary states; built-in recursion for Map / Parallel / nested state machines). To run a step
 in a real local container instead of mocking it, use
-[`DockerBatchStrategy`](docs/strategies.md#run-the-steps-container-locally).
+[`DockerBatchStrategy`](docs/strategies.md#run-the-steps-container-locally) (for Batch/`.sync`
+steps) or [`DockerLambdaStrategy`](docs/strategies.md#run-a-lambda-container-image-via-rie) (to
+run a `lambda:invoke` step's real image via the Runtime Interface Emulator).
 
 ## Features
 
@@ -165,6 +170,8 @@ README) — see the [examples index](examples/README.md). Start with:
 - [`examples/docker-batch/`](examples/docker-batch/) — run steps in real local containers
   (`DockerfileImage` + `BakeImage`) plus a nested machine. `make run-example` runs it (needs
   Docker, AWS creds, and a `ROLE_ARN` env var).
+- [`examples/docker-lambda/`](examples/docker-lambda/) — run a `lambda:invoke` step's real
+  Lambda container image via the Runtime Interface Emulator (`DockerLambdaStrategy`). Needs Docker.
 
 ## License
 

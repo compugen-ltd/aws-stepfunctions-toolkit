@@ -36,8 +36,8 @@ mock_mapping = {
 }
 
 runner = WorkflowRunner(
-    role_arn=ROLE_ARN,
-    asl_registry={"main": definition},
+    # Each state machine carries its own execution role (the role its states run under).
+    asl_registry={"main": {**definition, "ROLE_ARN": ROLE_ARN}},
     mock_mapping=mock_mapping,
 )
 

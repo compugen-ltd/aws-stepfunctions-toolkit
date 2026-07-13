@@ -50,7 +50,7 @@ input ──▶ │  pick strategy ─▶ strategy.execute() ─▶ result      
           │                                   ▼                                        │
           │            output  ──────────────────────────▶ next state ─┐               │
           └────────────────────────────────────────────────────────────┘               │
-                                            (loop)                                       
+                                            (loop)
 ```
 
 For a step the API can't run — say a `batch:submitJob.sync` task — a strategy like
@@ -59,9 +59,10 @@ For a step the API can't run — say a `batch:submitJob.sync` task — a strateg
 
 ## What you provide
 
-- **`role_arn`** — an IAM role/credentials allowed to call `test_state`.
 - **`asl_registry`** — your ASL definition(s), keyed by name; the entry point must be `"main"`.
-  Nested state machines are registered too (see [Control flow](control-flow.md)).
+  Each entry carries its own **`ROLE_ARN`** — the IAM execution role that machine's states run
+  under when calling `test_state` (`{**definition, "ROLE_ARN": "arn:..."}`). Nested state machines
+  are registered too, each with its own role (see [Control flow](control-flow.md)).
 - **`mock_mapping`** — `{state_name: strategy}` choosing how the steps that need help run.
 - Optional **`variables`** (Step Functions context variables), an
   **`input_validation_function`**, and a **`region`** (otherwise resolved from `AWS_REGION` /

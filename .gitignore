@@ -38,3 +38,5 @@ requirements.txt
 # Templates (example.uv.toml) stay tracked.
 uv.toml
 CLAUDE.local.md
+
+mock_data

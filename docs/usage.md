@@ -73,10 +73,12 @@ import os
 from aws_stepfunctions_toolkit import WorkflowRunner
 
 runner = WorkflowRunner(
-    role_arn=os.environ["ROLE_ARN"],          # a role allowed to call test_state
+    # Each state machine carries its OWN execution role (the role its states run under via
+    # test_state). A nested machine can use a narrower role than its parent — running under
+    # one shared role hides per-role IAM scoping bugs.
     asl_registry={
-        "main": parent,
-        "child_flow": child,                  # nested machine, keyed by the step's name
+        "main": {**parent, "ROLE_ARN": os.environ["ROLE_ARN"]},
+        "child_flow": {**child, "ROLE_ARN": os.environ["ROLE_ARN"]},  # nested machine, keyed by the step's name
     },
     mock_mapping=mock_mapping,
     variables=variables,
@@ -135,8 +137,9 @@ The shipped example is just a pytest module — wire the runner up in a test and
 
 ```python
 def test_pipeline(tmp_path):
-    runner = WorkflowRunner(role_arn=os.environ["ROLE_ARN"], asl_registry={...},
-                            mock_mapping={...}, variables={"workfolder": "/data"})
+    runner = WorkflowRunner(
+        asl_registry={"main": {**definition, "ROLE_ARN": os.environ["ROLE_ARN"]}},
+        mock_mapping={...}, variables={"workfolder": "/data"})
     out = runner.start(initial_input)
     assert out["..."] == ...
 ```

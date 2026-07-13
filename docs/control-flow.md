@@ -14,11 +14,10 @@ Register each nested machine in `asl_registry` **keyed by the name of the state 
 
 ```python
 runner = WorkflowRunner(
-    role_arn=role_arn,
     asl_registry={
-        "main": parent_definition,
+        "main": {**parent_definition, "ROLE_ARN": parent_role_arn},
         # the parent has a startExecution task state named "child_flow":
-        "child_flow": child_definition,
+        "child_flow": {**child_definition, "ROLE_ARN": child_role_arn},
     },
     mock_mapping=mock_mapping,
 )
@@ -26,6 +25,15 @@ runner = WorkflowRunner(
 
 If a `startExecution` step's name isn't found in the registry, you get a clear error listing the
 available keys.
+
+### Per-machine execution roles
+
+Each registry entry carries its **own** `ROLE_ARN` — the execution role that machine's states run
+under via `test_state`. As execution crosses a nested `startExecution` boundary the runner switches
+the active role to the sub-machine's role (and restores the parent's afterward), matching real AWS
+where a parent and its sub-machine have distinct roles. Giving the child a narrower role surfaces
+per-role IAM scoping bugs (e.g. a missing permission on the child role) that a single shared role
+would hide. `ROLE_ARN` is required on every entry — there's no shared-role fallback.
 
 ## Map states
 
